@@ -7,6 +7,7 @@ import java.util.Set;
 
 public class Main {
     public static void main(String[] args) throws Exception {
+        // Updated commands set to include only built-in commands
         Set<String> commands = Set.of("cd", "echo", "exit", "pwd", "type", "cat");
         Scanner scanner = new Scanner(System.in);
         String cwd = Path.of("").toAbsolutePath().toString();
