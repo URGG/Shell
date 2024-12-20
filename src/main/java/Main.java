@@ -2,8 +2,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
 import java.util.Set;
+import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) throws Exception {
@@ -18,7 +18,7 @@ public class Main {
                 System.exit(0);
             } else if (input.startsWith("echo ")) {
                 String[] echoArgs = parseInput(input.substring(5).trim()); // Trim input before parsing
-                System.out.println(String.join(" ", echoArgs)); // Join without extra spaces
+                System.out.println(String.join(" ", echoArgs).trim()); // Join without extra spaces and trim
             } else if (input.startsWith("cat ")) {
                 String[] catArgs = parseInput(input.substring(4).trim()); // Trim input before parsing
                 StringBuilder output = new StringBuilder();
@@ -104,7 +104,7 @@ public class Main {
                 }
             } else if (c == ' ' && !inSingleQuotes && !inDoubleQuotes) {
                 if (currentArg.length() > 0) {
-                    args.add(currentArg.toString());
+                    args.add(currentArg.toString().trim()); // Ensure no leading/trailing spaces
                     currentArg.setLength(0); // Reset for the next argument
                 }
             } else {
@@ -114,7 +114,7 @@ public class Main {
 
         // Add the last argument if there's any
         if (currentArg.length() > 0) {
-            args.add(currentArg.toString());
+            args.add(currentArg.toString().trim()); // Trim extra spaces
         }
 
         return args.toArray(new String[0]);
