@@ -46,13 +46,15 @@ public class Main {
             // Handle `cat`
             else if (input.startsWith("cat ")) {
                 String[] argsCat = parseInput(input.substring(4));
+                // Print all file contents continuously without extra newlines
                 for (String fileName : argsCat) {
                     Path filePath = Path.of(fileName);
                     if (Files.exists(filePath)) {
                         try {
                             List<String> lines = Files.readAllLines(filePath);
+                            // Print the file content without adding extra newline between files
                             for (String line : lines) {
-                                System.out.println(line);
+                                System.out.print(line);
                             }
                         } catch (Exception e) {
                             System.out.printf("cat: %s: Error reading file%n", fileName);
@@ -61,6 +63,7 @@ public class Main {
                         System.out.printf("cat: %s: No such file or directory%n", fileName);
                     }
                 }
+                System.out.println(); // Print a final newline at the end of `cat` output
             }
         }
     }
