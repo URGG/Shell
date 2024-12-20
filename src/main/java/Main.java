@@ -17,12 +17,12 @@ public class Main {
             if (input.equals("exit 0")) {
                 System.exit(0);
             } else if (input.startsWith("echo ")) {
-                String[] args = parseInput(input.substring(5));
-                System.out.println(String.join(" ", args)); // Print the quoted content
+                String[] echoArgs = parseInput(input.substring(5)); // Renamed variable
+                System.out.println(String.join(" ", echoArgs)); // Print the quoted content
             } else if (input.startsWith("cat ")) {
-                String[] args = parseInput(input.substring(4));
+                String[] catArgs = parseInput(input.substring(4)); // Renamed variable
                 // Handle the cat command with args as file names
-                for (String fileName : args) {
+                for (String fileName : catArgs) {
                     Path filePath = Path.of(fileName);
                     if (Files.exists(filePath)) {
                         Files.lines(filePath).forEach(System.out::println);
