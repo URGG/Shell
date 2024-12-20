@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-public class ShellProgram {
+public class Main{
 
     private static String currentDirectory = System.getProperty("user.dir");
 
