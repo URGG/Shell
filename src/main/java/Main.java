@@ -40,7 +40,8 @@ public class Main {
                 // Print the collected output
                 System.out.println(output.toString().trim()); // Trim trailing space
             } else if (input.startsWith("type ")) {
-                String arg = input.substring(5);
+                String arg = input.substring ```java
+(5);
                 if (commands.contains(arg)) {
                     System.out.printf("%s is a shell builtin%n", arg);
                 } else {
@@ -113,7 +114,7 @@ public class Main {
                     currentArg.setLength(0); // Reset for the next argument
                 }
             } else {
-                currentArg.append(c);
+                currentArg.append(c); // Append the character to the current argument
             }
         }
 
