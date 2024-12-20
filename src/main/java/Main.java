@@ -30,14 +30,14 @@ public class Main {
                         // Read the file content and append to output
                         List<String> lines = Files.readAllLines(filePath);
                         for (String line : lines) {
-                            output.append(line).append(" "); // Append each line with a space
+                            output.append(line); // Append each line without a trailing space
                         }
                     } else {
                         System.out.printf("cat: %s: No such file or directory%n", fileName);
                     }
                 }
-                // Print the collected output, trimming any trailing space
-                System.out.println(output.toString().trim());
+                // Print the collected output
+                System.out.println(output.toString());
             } else if (input.startsWith("type ")) {
                 String arg = input.substring(5);
                 if (commands.contains(arg)) {
