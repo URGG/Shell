@@ -7,7 +7,7 @@ import java.util.Set;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        // Updated commands set to include only built-in commands (removed "cat")
+        // Updated commands set to include only built-in commands
         Set<String> commands = Set.of("cd", "echo", "exit", "pwd", "type");
         Scanner scanner = new Scanner(System.in);
         String cwd = Path.of("").toAbsolutePath().toString();
@@ -88,14 +88,27 @@ public class Main {
         boolean inSingleQuotes = false;
         boolean inDoubleQuotes = false;
 
-        for (char c : input.toCharArray()) {
+        for (int i = 0; i < input.length(); i++) {
+            char c = input.charAt(i);
             if (c == '\'') {
                 inSingleQuotes = !inSingleQuotes; // Toggle the inSingleQuotes flag
             } else if (c == '\"') {
                 inDoubleQuotes = !inDoubleQuotes; // Toggle the inDoubleQuotes flag
+            } else if (c == '\\') {
+                // Handle escape sequences
+                if (i + 1 < input.length()) {
+                    char nextChar = input.charAt(i + 1);
+                    if (nextChar == '\'' || nextChar == '\"' || nextChar == '\\') {
+                        currentArg.append(nextChar); // Append the escaped character
+                        i++; // Skip the next character
+                    } else {
+                        currentArg.append(c); // Append the backslash as is }
+                } else {
+                    currentArg.append(c); // Append the backslash as is
+                }
             } else if (c == ' ' && !inSingleQuotes && !inDoubleQuotes) {
                 if (currentArg.length() > 0) {
-                    args.add(currentArg .toString());
+                    args.add(currentArg.toString());
                     currentArg.setLength(0); // Reset for the next argument
                 }
             } else {
