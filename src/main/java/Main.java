@@ -1,80 +1,129 @@
-import java.io.*;
-import java.util.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
 
 public class Main {
+
+    private static String cwd = System.getProperty("user.dir");
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
 
-        // Main loop for shell
         while (true) {
+            // Display the prompt
             System.out.print("$ ");
-            String input = scanner.nextLine();
+            String input = scanner.nextLine().trim();
 
-            // Break if input is 'exit'
-            if (input.trim().equals("exit")) {
-                break;
+            if (input.isEmpty()) {
+                continue;
             }
 
-            // Split the input into tokens
-            List<String> tokens = new ArrayList<>(Arrays.asList(input.split("\\s+")));
-
-            // Handle different commands
-            String command = tokens.get(0);
-            switch (command) {
-                case "echo":
-                    handleEcho(tokens);
-                    break;
-                case "cat":
-                    handleCat(tokens);
-                    break;
-                default:
-                    System.out.println(command + ": command not found");
+            // Exit command
+            if (input.equals("exit")) {
+                System.exit(0);
             }
-        }
-    }
 
-    public static void handleEcho(List<String> tokens) {
-        // Print arguments for echo
-        StringBuilder output = new StringBuilder();
-        for (int i = 1; i < tokens.size(); i++) {
-            output.append(tokens.get(i));
-            if (i != tokens.size() - 1) {
-                output.append(" ");
+            // Handle `pwd`
+            if (input.equals("pwd")) {
+                System.out.println(cwd);
             }
-        }
-        System.out.println(output.toString());
-    }
-
-    public static void handleCat(List<String> tokens) {
-        if (tokens.size() < 2) {
-            System.out.println("cat: missing operand");
-            return;
-        }
-
-        boolean firstFile = true;
-
-        for (int i = 1; i < tokens.size(); i++) {
-            String filePath = tokens.get(i);
-            try {
-                File file = new File(filePath);
-                if (file.exists() && file.isFile()) {
-                    Scanner fileScanner = new Scanner(file);
-                    if (!firstFile) {
-                        System.out.print("."); // Add period between contents of files
-                    }
-                    firstFile = false;
-                    // Print the content of the current file
-                    while (fileScanner.hasNextLine()) {
-                        System.out.print(fileScanner.nextLine());
-                    }
-                    fileScanner.close();
-                } else {
-                    System.out.println("cat: " + filePath + ": No such file");
+            // Handle `echo` with quoted arguments
+            else if (input.startsWith("echo ")) {
+                String[] argsEcho = parseInput(input.substring(5)); 
+                System.out.println(String.join(" ", argsEcho));
+            }
+            // Handle `cd`
+            else if (input.startsWith("cd ")) {
+                String dir = input.substring(3).trim();
+                String result = handleCd(dir);
+                if (result != null) {
+                    System.out.println(result); 
                 }
-            } catch (FileNotFoundException e) {
-                System.out.println("cat: " + filePath + ": No such file");
+            }
+            // Handle `cat`
+            else if (input.startsWith("cat ")) {
+                String[] argsCat = parseInput(input.substring(4));
+                for (String fileName : argsCat) {
+                    Path filePath = Path.of(fileName);
+                    if (Files.exists(filePath)) {
+                        try {
+                            List<String> lines = Files.readAllLines(filePath);
+                            for (String line : lines) {
+                                System.out.println(line);
+                            }
+                        } catch (Exception e) {
+                            System.out.printf("cat: %s: Error reading file%n", fileName);
+                        }
+                    } else {
+                        System.out.printf("cat: %s: No such file or directory%n", fileName);
+                    }
+                }
             }
         }
+    }
+
+    private static String handleCd(String dir) {
+        if (dir.equals("~")) {
+            dir = System.getenv("HOME");
+        }
+
+        Path path = Paths.get(cwd, dir).toAbsolutePath().normalize();
+
+        if (Files.isDirectory(path)) {
+            cwd = path.toString();
+            return null;
+        } else {
+            return "cd: " + dir + ": No such file or directory";
+        }
+    }
+
+    private static String[] parseInput(String input) {
+        List<String> args = new ArrayList<>();
+        StringBuilder currentArg = new StringBuilder();
+        boolean inDoubleQuotes = false;
+        boolean inSingleQuotes = false;
+        boolean escaping = false;
+
+        for (int i = 0; i < input.length(); i++) {
+            char c = input.charAt(i);
+
+            if (escaping) {
+                if (c == 'n') {
+                    currentArg.append('\n');  // Handle newline escape
+                } else if (c == '\"' || c == '\\' || c == '$') {
+                    currentArg.append(c); // Handle escape for special characters
+                } else {
+                    currentArg.append('\\');  // Just append the backslash if unrecognized
+                    currentArg.append(c);
+                }
+                escaping = false;
+            } else if (c == '\\') {
+                escaping = true;  // Start of an escape sequence
+            } else if (c == '\"') {
+                inDoubleQuotes = !inDoubleQuotes;  // Toggle double-quote mode
+            } else if (c == '\'') {
+                if (inDoubleQuotes) {
+                    currentArg.append(c);  // Add single quotes inside double quotes
+                } else {
+                    inSingleQuotes = !inSingleQuotes;  // Toggle single-quote mode
+                }
+            } else if (c == ' ' && !inDoubleQuotes && !inSingleQuotes) {
+                if (currentArg.length() > 0) {
+                    args.add(currentArg.toString());
+                    currentArg.setLength(0);
+                }
+            } else {
+                currentArg.append(c);
+            }
+        }
+
+        if (currentArg.length() > 0) {
+            args.add(currentArg.toString());
+        }
+
+        return args.toArray(new String[0]);
     }
 }
