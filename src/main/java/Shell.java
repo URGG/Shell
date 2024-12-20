@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-public class Main {
+public class Shell {
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
@@ -45,21 +45,25 @@ public class Main {
         scanner.close();
     }
 
-    // Parse input while handling double quotes
+    // Parse input while handling single and double quotes
     private static List<String> parseInput(String input) {
         List<String> tokens = new ArrayList<>();
-        boolean inQuotes = false;
+        boolean inSingleQuotes = false;
+        boolean inDoubleQuotes = false;
         StringBuilder currentToken = new StringBuilder();
 
         for (int i = 0; i < input.length(); i++) {
             char c = input.charAt(i);
 
-            if (c == '"' && (i == 0 || input.charAt(i - 1) != '\\')) {
-                inQuotes = !inQuotes;
+            if (c == '"' && !inSingleQuotes) { // Toggle double-quote mode
+                inDoubleQuotes = !inDoubleQuotes;
+                continue;
+            } else if (c == '\'' && !inDoubleQuotes) { // Toggle single-quote mode
+                inSingleQuotes = !inSingleQuotes;
                 continue;
             }
 
-            if (c == ' ' && !inQuotes) {
+            if (c == ' ' && !inSingleQuotes && !inDoubleQuotes) {
                 if (currentToken.length() > 0) {
                     tokens.add(currentToken.toString());
                     currentToken.setLength(0);
@@ -112,3 +116,4 @@ public class Main {
         System.out.println(output.toString());
     }
 }
+
