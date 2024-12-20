@@ -1,5 +1,7 @@
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
 
@@ -16,15 +18,17 @@ public class Main {
                 System.exit(0);
             } else if (input.startsWith("echo ")) {
                 String[] args = parseInput(input.substring(5));
-                System.out.println(args[0]); // Print the quoted content
+                System.out.println(String.join(" ", args)); // Print the quoted content
             } else if (input.startsWith("cat ")) {
                 String[] args = parseInput(input.substring(4));
-                // Handle the cat command with args[0] as the file name
-                Path filePath = Path.of(args[0]);
-                if (Files.exists(filePath)) {
-                    Files.lines(filePath).forEach(System.out::println);
-                } else {
-                    System.out.printf("cat: %s: No such file or directory%n", args[0]);
+                // Handle the cat command with args as file names
+                for (String fileName : args) {
+                    Path filePath = Path.of(fileName);
+                    if (Files.exists(filePath)) {
+                        Files.lines(filePath).forEach(System.out::println);
+                    } else {
+                        System.out.printf("cat: %s: No such file or directory%n", fileName);
+                    }
                 }
             } else if (input.startsWith("type ")) {
                 String arg = input.substring(5);
@@ -70,18 +74,29 @@ public class Main {
     }
 
     private static String[] parseInput(String input) {
-        // Remove leading and trailing spaces
-        input = input.trim();
-        
-        // Check for single quotes
-        if (input.startsWith("'") && input.endsWith("'")) {
-            // Extract the content within single quotes
-            String quotedContent = input.substring(1, input.length() - 1);
-            return new String[] { quotedContent };
+        List<String> args = new ArrayList<>();
+        StringBuilder currentArg = new StringBuilder();
+        boolean inQuotes = false;
+
+        for (char c : input.toCharArray()) {
+            if (c == '\'') {
+                inQuotes = !inQuotes; // Toggle the inQuotes flag
+            } else if (c == ' ' && !inQuotes) {
+                if (currentArg.length() > 0) {
+                    args.add(currentArg.toString());
+                    currentArg.setLength(0); // Reset for the next argument
+                }
+            } else {
+                currentArg.append(c);
+            }
         }
-        
-        // Split by spaces while preserving quoted strings
-        return input.split(" ");
+
+        // Add the last argument if it exists
+        if (currentArg.length() > 0) {
+            args.add(currentArg.toString());
+        }
+
+        return args.toArray(new String[0]);
     }
 
     private static String getPath(String command) {
