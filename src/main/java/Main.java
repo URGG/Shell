@@ -4,30 +4,23 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-public class Main{
+public class Main {
+
+    private static String currentDirectory = System.getProperty("user.dir"); // Track the current directory
 
     public static void main(String[] args) {
-        runShell();
-    }
-
-    // Main shell loop
-    private static void runShell() {
         Scanner scanner = new Scanner(System.in);
 
         while (true) {
             System.out.print("$ "); // Display the shell prompt
             String input = scanner.nextLine().trim();
 
-            if (input.isEmpty()) {
-                continue;
-            }
-
-            // Exit on "exit"
-            if (input.equalsIgnoreCase("exit")) {
+            // Exit on empty input or specific commands like "exit"
+            if (input.equalsIgnoreCase("exit") || input.isEmpty()) {
                 break;
             }
 
-            // Parse input into command and arguments
+            // Parse the command and arguments
             List<String> tokens = parseInput(input);
 
             if (tokens.isEmpty()) {
@@ -45,6 +38,9 @@ public class Main{
                 case "cat":
                     handleCat(arguments);
                     break;
+                case "cd":
+                    handleCd(arguments);
+                    break;
                 default:
                     System.out.println(command + ": command not found");
                     break;
@@ -54,7 +50,7 @@ public class Main{
         scanner.close();
     }
 
-    // Parse input with proper quoting logic
+    // Parse input while handling single and double quotes
     private static List<String> parseInput(String input) {
         List<String> tokens = new ArrayList<>();
         boolean inSingleQuotes = false;
@@ -104,7 +100,7 @@ public class Main{
         StringBuilder output = new StringBuilder();
 
         for (String filePath : arguments) {
-            File file = new File(filePath);
+            File file = new File(currentDirectory, filePath); // Use current directory for relative paths
 
             if (file.exists() && file.isFile()) {
                 try (Scanner fileScanner = new Scanner(file)) {
@@ -123,6 +119,23 @@ public class Main{
 
         // Print concatenated file contents followed by a newline
         System.out.println(output.toString());
+    }
+
+    // Handle the "cd" command
+    private static void handleCd(List<String> arguments) {
+        if (arguments.isEmpty()) {
+            System.out.println("cd: missing operand");
+            return;
+        }
+
+        String path = arguments.get(0);
+        File newDir = new File(currentDirectory, path); // Use current directory for relative paths
+
+        if (newDir.exists() && newDir.isDirectory()) {
+            currentDirectory = newDir.getAbsolutePath();
+        } else {
+            System.out.println("cd: " + path + ": No such file or directory");
+        }
     }
 }
 
