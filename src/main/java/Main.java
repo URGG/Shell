@@ -20,7 +20,7 @@ public class Main {
             } else if (input.startsWith("echo ")) {
                 String[] echoArgs = parseInput(input.substring(5)); // Renamed variable
                 // Join the arguments, ensuring there's no extra space at the start or end
-                System.out.println(String.join(" ", echoArgs).replaceAll(" +", " ")); // Remove extra spaces
+                System.out.println(String.join(" ", echoArgs)); // Simply joining arguments with a single space
             } else if (input.startsWith("cat ")) {
                 String[] catArgs = parseInput(input.substring(4)); // Renamed variable
                 StringBuilder output = new StringBuilder(); // To collect output
