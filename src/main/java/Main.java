@@ -6,21 +6,22 @@ public class Main {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
 
-        // Main loop for shell
+        // Main loop for shell simulation
         while (true) {
+            // Prompt for input
             System.out.print("$ ");
-            String input = scanner.nextLine();
+            String input = scanner.nextLine().trim();
 
-            // Break if input is 'exit'
-            if (input.trim().equals("exit")) {
+            // Exit condition for the loop
+            if (input.equals("exit")) {
                 break;
             }
 
-            // Split the input into tokens
-            List<String> tokens = new ArrayList<>(Arrays.asList(input.split("\\s+")));
+            // Split input into tokens based on whitespace
+            String[] tokens = input.split("\\s+");
 
             // Handle different commands
-            String command = tokens.get(0);
+            String command = tokens[0];
             switch (command) {
                 case "echo":
                     handleEcho(tokens);
@@ -34,51 +35,66 @@ public class Main {
         }
     }
 
-    public static void handleEcho(List<String> tokens) {
-        // Print arguments for echo
+    // Handle 'echo' command
+    private static void handleEcho(String[] tokens) {
+        // If the tokens contain no content after 'echo', return nothing
+        if (tokens.length <= 1) {
+            System.out.println();
+            return;
+        }
+
+        // Print the arguments separated by a single space
         StringBuilder output = new StringBuilder();
-        for (int i = 1; i < tokens.size(); i++) {
-            output.append(tokens.get(i));
-            if (i != tokens.size() - 1) {
+        for (int i = 1; i < tokens.length; i++) {
+            output.append(tokens[i]);
+            if (i != tokens.length - 1) {
                 output.append(" ");  // Add space between arguments
             }
         }
         System.out.println(output.toString());
     }
 
-    public static void handleCat(List<String> tokens) {
-        if (tokens.size() < 2) {
+    // Handle 'cat' command
+    private static void handleCat(String[] tokens) {
+        // If there are no files given after 'cat', show error
+        if (tokens.length <= 1) {
             System.out.println("cat: missing operand");
             return;
         }
 
-        boolean firstFile = true;
         StringBuilder output = new StringBuilder();
+        boolean firstFile = true;
 
-        for (int i = 1; i < tokens.size(); i++) {
-            String filePath = tokens.get(i);
-            try {
-                File file = new File(filePath);
-                if (file.exists() && file.isFile()) {
-                    Scanner fileScanner = new Scanner(file);
+        // Loop through all file arguments provided after 'cat'
+        for (int i = 1; i < tokens.length; i++) {
+            String filePath = tokens[i];
+            File file = new File(filePath);
+
+            if (file.exists() && file.isFile()) {
+                try (Scanner fileScanner = new Scanner(file)) {
+                    // If not the first file, add period between file contents
                     if (!firstFile) {
-                        output.append("."); // Add period between contents of files
+                        output.append(".");
                     }
                     firstFile = false;
-                    // Append the content of the current file to output
+
+                    // Read file content and append to output
                     while (fileScanner.hasNextLine()) {
                         output.append(fileScanner.nextLine());
                     }
-                    fileScanner.close();
-                } else {
+                } catch (FileNotFoundException e) {
+                    // This block should not be necessary due to the exists check above.
                     System.out.println("cat: " + filePath + ": No such file");
                 }
-            } catch (FileNotFoundException e) {
+            } else {
+                // Handle file not found scenario
                 System.out.println("cat: " + filePath + ": No such file");
             }
         }
 
-        // Print the concatenated result
-        System.out.println(output.toString());
+        // Output the concatenated result of file contents
+        if (output.length() > 0) {
+            System.out.println(output.toString());
+        }
     }
 }
