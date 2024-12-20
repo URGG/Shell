@@ -5,7 +5,7 @@ import java.util.Set;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        Set<String> commands = Set.of("cd", "echo", "exit", "pwd", "type");
+        Set<String> commands = Set.of("cd", "echo", "exit", "pwd", "type", "cat");
         Scanner scanner = new Scanner(System.in);
         String cwd = Path.of("").toAbsolutePath().toString();
         
@@ -15,7 +15,17 @@ public class Main {
             if (input.equals("exit 0")) {
                 System.exit(0);
             } else if (input.startsWith("echo ")) {
-                System.out.println(input.substring(5));
+                String[] args = parseInput(input.substring(5));
+                System.out.println(args[0]); // Print the quoted content
+            } else if (input.startsWith("cat ")) {
+                String[] args = parseInput(input.substring(4));
+                // Handle the cat command with args[0] as the file name
+                Path filePath = Path.of(args[0]);
+                if (Files.exists(filePath)) {
+                    Files.lines(filePath).forEach(System.out::println);
+                } else {
+                    System.out.printf("cat: %s: No such file or directory%n", args[0]);
+                }
             } else if (input.startsWith("type ")) {
                 String arg = input.substring(5);
                 if (commands.contains(arg)) {
@@ -35,14 +45,13 @@ public class Main {
                 
                 // Handle the ~ character
                 if (dir.equals("~")) {
-                    dir = System.getenv("HOME"); // Get the home directory
+                    dir = System.getenv("HOME");
                 } else if (!dir.startsWith("/")) {
-                    dir = cwd + "/" + dir; // Handle relative paths
+                    dir = cwd + "/" + dir;
                 }
                 
-                // Check if the directory exists
                 if (Files.isDirectory(Path.of(dir))) {
-                    cwd = Path.of(dir).normalize().toString(); // Update current working directory
+                    cwd = Path.of(dir).normalize().toString();
                 } else {
                     System.out.printf("cd: %s: No such file or directory%n", dir);
                 }
@@ -58,6 +67,21 @@ public class Main {
                 }
             }
         }
+    }
+
+    private static String[] parseInput(String input) {
+        // Remove leading and trailing spaces
+        input = input.trim();
+        
+        // Check for single quotes
+        if (input.startsWith("'") && input.endsWith("'")) {
+            // Extract the content within single quotes
+            String quotedContent = input.substring(1, input.length() - 1);
+            return new String[] { quotedContent };
+        }
+        
+        // Split by spaces while preserving quoted strings
+        return input.split(" ");
     }
 
     private static String getPath(String command) {
