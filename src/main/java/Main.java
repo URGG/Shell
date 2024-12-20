@@ -102,7 +102,8 @@ public class Main {
                         currentArg.append(nextChar); // Append the escaped character
                         i++; // Skip the next character
                     } else {
-                        currentArg.append(c); // Append the backslash as is }
+                        currentArg.append(c); // Append the backslash as is
+                    }
                 } else {
                     currentArg.append(c); // Append the backslash as is
                 }
