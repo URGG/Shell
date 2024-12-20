@@ -105,7 +105,11 @@ public class Main {
             } else if (c == '\"') {
                 inDoubleQuotes = !inDoubleQuotes;  // Toggle double-quote mode
             } else if (c == '\'') {
-                inSingleQuotes = !inSingleQuotes;  // Toggle single-quote mode
+                if (inDoubleQuotes) {
+                    currentArg.append(c);  // Add single quotes inside double quotes
+                } else {
+                    inSingleQuotes = !inSingleQuotes;  // Toggle single-quote mode
+                }
             } else if (c == ' ' && !inDoubleQuotes && !inSingleQuotes) {
                 if (currentArg.length() > 0) {
                     args.add(currentArg.toString());
