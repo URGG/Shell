@@ -4,7 +4,6 @@ import java.util.Scanner;
 import java.util.Set;
 public class Main {
   public static void main(String[] args) throws Exception {
-    
     Set<String> commands = Set.of("cd", "echo", "exit", "pwd", "type");
     Scanner scanner = new Scanner(System.in);
     String cwd = Path.of("").toAbsolutePath().toString();
@@ -31,8 +30,12 @@ public class Main {
         System.out.println(cwd);
       } else if (input.startsWith("cd ")) {
         String dir = input.substring(3);
+        if (!dir.startsWith("/")) {
+          dir = cwd + "/" + dir;
+        }
         if (Files.isDirectory(Path.of(dir))) {
-          cwd = dir;
+          
+          cwd = Path.of(dir).normalize().toString();
         } else {
           System.out.printf("cd: %s: No such file or directory%n", dir);
         }
