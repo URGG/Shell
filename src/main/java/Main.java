@@ -40,7 +40,7 @@ public class Main {
         for (int i = 1; i < tokens.size(); i++) {
             output.append(tokens.get(i));
             if (i != tokens.size() - 1) {
-                output.append(" ");
+                output.append(" ");  // Add space between arguments
             }
         }
         System.out.println(output.toString());
