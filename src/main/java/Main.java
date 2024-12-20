@@ -31,14 +31,14 @@ public class Main {
                         // Read the file content and append to output
                         List<String> lines = Files.readAllLines(filePath);
                         for (String line : lines) {
-                            output.append(line); // Append each line without a trailing space
+                            output.append(line).append(" "); // Append each line with a space
                         }
                     } else {
                         System.out.printf("cat: %s: No such file or directory%n", fileName);
                     }
                 }
                 // Print the collected output
-                System.out.println(output.toString());
+                System.out.println(output.toString().trim()); // Trim trailing space
             } else if (input.startsWith("type ")) {
                 String arg = input.substring(5);
                 if (commands.contains(arg)) {
@@ -85,14 +85,17 @@ public class Main {
     private static String[] parseInput(String input) {
         List<String> args = new ArrayList<>();
         StringBuilder currentArg = new StringBuilder();
-        boolean inQuotes = false;
+        boolean inSingleQuotes = false;
+        boolean inDoubleQuotes = false;
 
         for (char c : input.toCharArray()) {
             if (c == '\'') {
-                inQuotes = !inQuotes; // Toggle the inQuotes flag
-            } else if (c == ' ' && !inQuotes) {
+                inSingleQuotes = !inSingleQuotes; // Toggle the inSingleQuotes flag
+            } else if (c == '\"') {
+                inDoubleQuotes = !inDoubleQuotes; // Toggle the inDoubleQuotes flag
+            } else if (c == ' ' && !inSingleQuotes && !inDoubleQuotes) {
                 if (currentArg.length() > 0) {
-                    args.add(currentArg.toString());
+                    args.add(currentArg .toString());
                     currentArg.setLength(0); // Reset for the next argument
                 }
             } else {
