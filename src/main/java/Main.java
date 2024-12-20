@@ -19,7 +19,9 @@ public class Main {
                 System.exit(0);
             } else if (input.startsWith("echo ")) {
                 String[] echoArgs = parseInput(input.substring(5)); // Renamed variable
-                System.out.println(String.join(" ", echoArgs)); // Print the quoted content
+                // Join the arguments, ensuring there's no extra space at the start or end
+                System.out.print(String.join(" ", echoArgs)); // Print the quoted content without a final newline
+                System.out.println(); // Print a newline after the output
             } else if (input.startsWith("cat ")) {
                 String[] catArgs = parseInput(input.substring(4)); // Renamed variable
                 StringBuilder output = new StringBuilder(); // To collect output
@@ -90,26 +92,24 @@ public class Main {
 
         for (int i = 0; i < input.length(); i++) {
             char c = input.charAt(i);
-
-            if (c == '\'' && !inDoubleQuotes) {
+            if (c == '\'') {
                 inSingleQuotes = !inSingleQuotes; // Toggle the inSingleQuotes flag
-            } else if (c == '\"' && !inSingleQuotes) {
+            } else if (c == '\"') {
                 inDoubleQuotes = !inDoubleQuotes; // Toggle the inDoubleQuotes flag
-            } else if (c == '\\' && inDoubleQuotes) {
-                // Handle escape sequences inside double quotes
+            } else if (c == '\\') {
+                // Handle escape sequences
                 if (i + 1 < input.length()) {
                     char nextChar = input.charAt(i + 1);
-                    if (nextChar == '\\' || nextChar == '\"' || nextChar == '$' || nextChar == 'n') {
-                        // Append escaped character
-                        currentArg.append(nextChar == 'n' ? '\n' : nextChar);
+                    if (nextChar == '\'' || nextChar == '\"' || nextChar == '\\') {
+                        currentArg.append(nextChar); // Append the escaped character
                         i++; // Skip the next character
                     } else {
-                        // Append the backslash as is if followed by any other character
-                        currentArg.append(c);
+                        currentArg.append(c); // Append the backslash as is
                     }
+                } else {
+                    currentArg.append(c); // Append the backslash as is
                 }
             } else if (c == ' ' && !inSingleQuotes && !inDoubleQuotes) {
-                // End of argument, add to args
                 if (currentArg.length() > 0) {
                     args.add(currentArg.toString());
                     currentArg.setLength(0); // Reset for the next argument
@@ -137,3 +137,4 @@ public class Main {
         return null;
     }
 }
+
