@@ -105,7 +105,7 @@ public class Main {
                         currentArg.append(c); // Append the backslash as is
                     }
                 } else {
- currentArg.append(c); // Append the backslash as is
+                    currentArg.append(c); // Append the backslash as is
                 }
             } else if (c == ' ' && !inSingleQuotes && !inDoubleQuotes) {
                 if (currentArg.length() > 0) {
