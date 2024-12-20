@@ -4,8 +4,8 @@ import java.util.Scanner;
 public class Main {
   public static void main(String[] args) throws Exception {
     Scanner scanner = new Scanner(System.in);
-    List<String> commandList = List.of("exit", "echo", "type");
     
+    List<String> commandList = List.of("exit", "echo", "type", "pwd");
     String[] command;
     String[] paths = System.getenv("PATH").split(File.pathSeparator);
     while (true) {
