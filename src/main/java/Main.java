@@ -1,14 +1,16 @@
-import java.io.*;
-import java.util.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
 
 public class Main {
-
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
 
-        // Main loop for shell simulation
+        // Main shell loop
         while (true) {
-            // Prompt for input
+            // Prompt for user input
             System.out.print("$ ");
             String input = scanner.nextLine().trim();
 
@@ -17,17 +19,25 @@ public class Main {
                 break;
             }
 
-            // Split input into tokens based on whitespace
-            String[] tokens = input.split("\\s+");
+            // Split input while respecting quotes
+            List<String> tokens = parseInput(input);
 
-            // Handle different commands
-            String command = tokens[0];
+            // If no tokens were parsed, continue to next loop iteration
+            if (tokens.isEmpty()) {
+                continue;
+            }
+
+            // Extract command and arguments
+            String command = tokens.get(0);
+            List<String> arguments = tokens.subList(1, tokens.size());
+
+            // Handle commands
             switch (command) {
                 case "echo":
-                    handleEcho(tokens);
+                    handleEcho(arguments);
                     break;
                 case "cat":
-                    handleCat(tokens);
+                    handleCat(arguments);
                     break;
                 default:
                     System.out.println(command + ": command not found");
@@ -35,29 +45,51 @@ public class Main {
         }
     }
 
-    // Handle 'echo' command
-    private static void handleEcho(String[] tokens) {
-        // If the tokens contain no content after 'echo', return nothing
-        if (tokens.length <= 1) {
-            System.out.println();
-            return;
-        }
+    // Parse input respecting double quotes
+    private static List<String> parseInput(String input) {
+        List<String> tokens = new ArrayList<>();
+        StringBuilder currentToken = new StringBuilder();
+        boolean inQuotes = false;
 
-        // Print the arguments separated by a single space
-        StringBuilder output = new StringBuilder();
-        for (int i = 1; i < tokens.length; i++) {
-            output.append(tokens[i]);
-            if (i != tokens.length - 1) {
-                output.append(" ");  // Add space between arguments
+        for (int i = 0; i < input.length(); i++) {
+            char c = input.charAt(i);
+
+            if (c == '"') {
+                inQuotes = !inQuotes; // Toggle quote state
+            } else if (c == '\\' && inQuotes && i + 1 < input.length()) {
+                char next = input.charAt(i + 1);
+                if (next == '"' || next == '\\') {
+                    currentToken.append(next);
+                    i++; // Skip next character
+                } else {
+                    currentToken.append(c); // Append backslash as-is
+                }
+            } else if (!inQuotes && Character.isWhitespace(c)) {
+                if (currentToken.length() > 0) {
+                    tokens.add(currentToken.toString());
+                    currentToken.setLength(0); // Reset token
+                }
+            } else {
+                currentToken.append(c);
             }
         }
-        System.out.println(output.toString());
+
+        // Add the last token if any
+        if (currentToken.length() > 0) {
+            tokens.add(currentToken.toString());
+        }
+
+        return tokens;
+    }
+
+    // Handle 'echo' command
+    private static void handleEcho(List<String> arguments) {
+        System.out.println(String.join(" ", arguments));
     }
 
     // Handle 'cat' command
-    private static void handleCat(String[] tokens) {
-        // If there are no files given after 'cat', show error
-        if (tokens.length <= 1) {
+    private static void handleCat(List<String> arguments) {
+        if (arguments.isEmpty()) {
             System.out.println("cat: missing operand");
             return;
         }
@@ -65,34 +97,28 @@ public class Main {
         StringBuilder output = new StringBuilder();
         boolean firstFile = true;
 
-        // Loop through all file arguments provided after 'cat'
-        for (int i = 1; i < tokens.length; i++) {
-            String filePath = tokens[i];
+        for (String filePath : arguments) {
             File file = new File(filePath);
 
             if (file.exists() && file.isFile()) {
                 try (Scanner fileScanner = new Scanner(file)) {
-                    // If not the first file, add period between file contents
                     if (!firstFile) {
-                        output.append(".");
+                        output.append(" ");
                     }
                     firstFile = false;
 
-                    // Read file content and append to output
                     while (fileScanner.hasNextLine()) {
                         output.append(fileScanner.nextLine());
                     }
                 } catch (FileNotFoundException e) {
-                    // This block should not be necessary due to the exists check above.
                     System.out.println("cat: " + filePath + ": No such file");
                 }
             } else {
-                // Handle file not found scenario
                 System.out.println("cat: " + filePath + ": No such file");
             }
         }
 
-        // Output the concatenated result of file contents
+        // Print concatenated file contents
         if (output.length() > 0) {
             System.out.println(output.toString());
         }
