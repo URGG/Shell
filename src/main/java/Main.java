@@ -94,6 +94,8 @@ public class Main {
             char c = input.charAt(i);
             if (c == '\'') {
                 inSingleQuotes = !inSingleQuotes; // Toggle the inSingleQuotes flag
+                // Append single quote as part of the argument if we are inside quotes
+                currentArg.append(c);
             } else if (c == '\"') {
                 inDoubleQuotes = !inDoubleQuotes; // Toggle the inDoubleQuotes flag
             } else if (c == '\\') {
@@ -137,4 +139,3 @@ public class Main {
         return null;
     }
 }
-
