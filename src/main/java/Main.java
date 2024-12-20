@@ -90,24 +90,26 @@ public class Main {
 
         for (int i = 0; i < input.length(); i++) {
             char c = input.charAt(i);
-            if (c == '\'') {
+
+            if (c == '\'' && !inDoubleQuotes) {
                 inSingleQuotes = !inSingleQuotes; // Toggle the inSingleQuotes flag
-            } else if (c == '\"') {
+            } else if (c == '\"' && !inSingleQuotes) {
                 inDoubleQuotes = !inDoubleQuotes; // Toggle the inDoubleQuotes flag
-            } else if (c == '\\') {
-                // Handle escape sequences
+            } else if (c == '\\' && inDoubleQuotes) {
+                // Handle escape sequences inside double quotes
                 if (i + 1 < input.length()) {
                     char nextChar = input.charAt(i + 1);
-                    if (nextChar == '\'' || nextChar == '\"' || nextChar == '\\') {
-                        currentArg.append(nextChar); // Append the escaped character
+                    if (nextChar == '\\' || nextChar == '\"' || nextChar == '$' || nextChar == 'n') {
+                        // Append escaped character
+                        currentArg.append(nextChar == 'n' ? '\n' : nextChar);
                         i++; // Skip the next character
                     } else {
-                        currentArg.append(c); // Append the backslash as is
+                        // Append the backslash as is if followed by any other character
+                        currentArg.append(c);
                     }
-                } else {
-                    currentArg.append(c); // Append the backslash as is
                 }
             } else if (c == ' ' && !inSingleQuotes && !inDoubleQuotes) {
+                // End of argument, add to args
                 if (currentArg.length() > 0) {
                     args.add(currentArg.toString());
                     currentArg.setLength(0); // Reset for the next argument
