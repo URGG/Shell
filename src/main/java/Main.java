@@ -49,6 +49,7 @@ public class Main {
                         System.out.printf("%s: not found%n", arg);
                     } else {
                         System.out.printf("%s is %s%n", arg, path);
+ ```java
                     }
                 }
             } else if (input.equals("pwd")) {
@@ -105,7 +106,7 @@ public class Main {
                         currentArg.append(c); // Append the backslash as is
                     }
                 } else {
- currentArg.append(c); // Append the backslash as is
+                    currentArg.append(c); // Append the backslash as is
                 }
             } else if (c == ' ' && !inSingleQuotes && !inDoubleQuotes) {
                 if (currentArg.length() > 0) {
