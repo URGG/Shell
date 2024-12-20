@@ -21,15 +21,23 @@ public class Main {
                 System.out.println(String.join(" ", echoArgs)); // Print the quoted content
             } else if (input.startsWith("cat ")) {
                 String[] catArgs = parseInput(input.substring(4)); // Renamed variable
+                StringBuilder output = new StringBuilder(); // To collect output
+
                 // Handle the cat command with args as file names
                 for (String fileName : catArgs) {
                     Path filePath = Path.of(fileName);
                     if (Files.exists(filePath)) {
-                        Files.lines(filePath).forEach(System.out::println);
+                        // Read the file content and append to output
+                        List<String> lines = Files.readAllLines(filePath);
+                        for (String line : lines) {
+                            output.append(line).append(" "); // Append each line with a space
+                        }
                     } else {
                         System.out.printf("cat: %s: No such file or directory%n", fileName);
                     }
                 }
+                // Print the collected output, trimming any trailing space
+                System.out.println(output.toString().trim());
             } else if (input.startsWith("type ")) {
                 String arg = input.substring(5);
                 if (commands.contains(arg)) {
@@ -101,7 +109,7 @@ public class Main {
 
     private static String getPath(String command) {
         for (String path : System.getenv("PATH").split(":")) {
-            Path fullPath = Path.of(path, command);
+            Path fullPath = Path.of(path, command );
             if (Files.isRegularFile(fullPath)) {
                 return fullPath.toString();
             }
