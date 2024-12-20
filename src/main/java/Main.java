@@ -46,7 +46,7 @@ public class Main {
                 } else {
                     String path = getPath(arg);
                     if (path == null) {
- System.out.printf("%s: not found%n", arg);
+                        System.out.printf("%s: not found%n", arg);
                     } else {
                         System.out.printf("%s is %s%n", arg, path);
                     }
