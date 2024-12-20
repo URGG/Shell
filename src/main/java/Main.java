@@ -7,7 +7,6 @@ import java.util.Set;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        // Updated commands set to include only built-in commands
         Set<String> commands = Set.of("cd", "echo", "exit", "pwd", "type");
         Scanner scanner = new Scanner(System.in);
         String cwd = Path.of("").toAbsolutePath().toString();
@@ -18,28 +17,24 @@ public class Main {
             if (input.equals("exit 0")) {
                 System.exit(0);
             } else if (input.startsWith("echo ")) {
-                String[] echoArgs = parseInput(input.substring(5)); // Renamed variable
-                // Join the arguments, ensuring there's no extra space at the start or end
-                System.out.println(String.join(" ", echoArgs)); // Simply joining arguments with a single space
+                String[] echoArgs = parseInput(input.substring(5).trim()); // Trim input before parsing
+                System.out.println(String.join(" ", echoArgs)); // Join without extra spaces
             } else if (input.startsWith("cat ")) {
-                String[] catArgs = parseInput(input.substring(4)); // Renamed variable
-                StringBuilder output = new StringBuilder(); // To collect output
+                String[] catArgs = parseInput(input.substring(4).trim()); // Trim input before parsing
+                StringBuilder output = new StringBuilder();
 
-                // Handle the cat command with args as file names
                 for (String fileName : catArgs) {
                     Path filePath = Path.of(fileName);
                     if (Files.exists(filePath)) {
-                        // Read the file content and append to output
                         List<String> lines = Files.readAllLines(filePath);
                         for (String line : lines) {
-                            output.append(line).append(" "); // Append each line with a space
+                            output.append(line).append(" "); // Append lines with spaces
                         }
                     } else {
                         System.out.printf("cat: %s: No such file or directory%n", fileName);
                     }
                 }
-                // Print the collected output
-                System.out.println(output.toString().trim()); // Trim trailing space
+                System.out.println(output.toString().trim()); // Remove extra space at the end
             } else if (input.startsWith("type ")) {
                 String arg = input.substring(5);
                 if (commands.contains(arg)) {
@@ -57,7 +52,6 @@ public class Main {
             } else if (input.startsWith("cd ")) {
                 String dir = input.substring(3).trim();
                 
-                // Handle the ~ character
                 if (dir.equals("~")) {
                     dir = System.getenv("HOME");
                 } else if (!dir.startsWith("/")) {
@@ -93,22 +87,20 @@ public class Main {
             char c = input.charAt(i);
             if (c == '\'') {
                 inSingleQuotes = !inSingleQuotes; // Toggle the inSingleQuotes flag
-                // Append single quote as part of the argument if we are inside quotes
-                currentArg.append(c);
+                currentArg.append(c); // Keep the single quote if inside it
             } else if (c == '\"') {
                 inDoubleQuotes = !inDoubleQuotes; // Toggle the inDoubleQuotes flag
             } else if (c == '\\') {
-                // Handle escape sequences
                 if (i + 1 < input.length()) {
                     char nextChar = input.charAt(i + 1);
                     if (nextChar == '\'' || nextChar == '\"' || nextChar == '\\') {
-                        currentArg.append(nextChar); // Append the escaped character
+                        currentArg.append(nextChar); // Append escaped character
                         i++; // Skip the next character
                     } else {
-                        currentArg.append(c); // Append the backslash as is
+                        currentArg.append(c); // Append backslash as is
                     }
                 } else {
-                    currentArg.append(c); // Append the backslash as is
+                    currentArg.append(c); // Append backslash as is
                 }
             } else if (c == ' ' && !inSingleQuotes && !inDoubleQuotes) {
                 if (currentArg.length() > 0) {
@@ -116,11 +108,11 @@ public class Main {
                     currentArg.setLength(0); // Reset for the next argument
                 }
             } else {
-                currentArg.append(c); // Append the character to the current argument
+                currentArg.append(c); // Add the character to the current argument
             }
         }
 
-        // Add the last argument if it exists
+        // Add the last argument if there's any
         if (currentArg.length() > 0) {
             args.add(currentArg.toString());
         }
