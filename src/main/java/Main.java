@@ -57,7 +57,7 @@ public class Main {
                 String dir = input.substring(3).trim();
                 
                 // Handle the ~ character
-                if (dir.equals("~")) {
+                if (dir .equals("~")) {
                     dir = System.getenv("HOME");
                 } else if (!dir.startsWith("/")) {
                     dir = cwd + "/" + dir;
