@@ -1,132 +1,103 @@
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
-
-
-public class Main{
-
-    private final String[] validCommands = {"exit", "echo", "type", "pwd", "cd"};
-    private String currentDirectory = System.getProperty("user.dir");
-
-    public void echo(String command){
-        String textBack = command.replace("echo ", "").trim();
-        System.out.println(textBack);
+public class Main { // Renamed class to Main
+    public static void main(String[] args) {
+        // Simulating input for testing
+        String input = "echo \"quz  hello\"  \"bar\""; // Example input
+        String[] tokens = parseInput(input);
+        
+        // Execute commands based on tokens
+        executeCommand(tokens);
+        
+        // Print the prompt after command execution
+        printPrompt();
     }
 
-    public void exit(String command){
-        command = command.replace("exit ", "").trim();
-        int code = 0;
-        try{
-            code = Integer.parseInt(command);
-        }
-        catch (Exception e){
-            System.exit(0);
-        }
-        System.exit(code);
-    }
-
-    public void type(String input){
-        String extractedCommand = input.replace("type ", "").trim();
-        boolean isValidCommand = isValidCommand(extractedCommand);
-
-        String localPath = extractPath(extractedCommand);
-        boolean hasValidPath = localPath != null;
-
-
-        if(isValidCommand)
-            System.out.println(extractedCommand + " is a shell builtin");
-        else if (hasValidPath)
-            System.out.println(extractedCommand + " is " + localPath);
-        else
-            System.out.println(extractedCommand + ": not found");
-
-    }
-
-    private boolean isValidCommand(String extractedCommand) {
-        for(String command : this.validCommands){
-            if (extractedCommand.equals(command)) {
-                return true;
+    private static String[] parseInput(String input) {
+        List<String> tokens = new ArrayList<>();
+        StringBuilder currentToken = new StringBuilder();
+        boolean inQuotes = false;
+        
+        for (int i = 0; i < input.length(); i++) {
+            char c = input.charAt(i);
+            
+            if (c == '\"') {
+                inQuotes = !inQuotes; // Toggle quoting state
+            } else if (c == '\\' && inQuotes) {
+                // Handle escape sequences
+                if (i + 1 < input.length()) {
+                    currentToken.append(input.charAt(i + 1));
+                    i++; // Skip the next character
+                }
+            } else if (c == ' ' && !inQuotes) {
+                // Token delimiter
+                if (currentToken.length() > 0) {
+                    tokens.add(currentToken.toString());
+                    currentToken.setLength(0); // Reset for next token
+                }
+            } else {
+                currentToken.append(c);
             }
         }
-        return false;
+        
+        // Add the last token if exists
+        if (currentToken.length() > 0) {
+            tokens.add(currentToken.toString());
+        }
+        
+        return tokens.toArray(new String[0]);
     }
 
-    public String extractPath(String input){
-        String command = input.split(" ")[0].trim();
+    private static void executeCommand(String[] tokens) {
+        if (tokens.length == 0) return;
 
-        String separator = getSystemSeparator();
-        String[] paths = System.getenv("PATH").split(separator);
+        String command = tokens[0];
+        
+        switch (command) {
+            case "echo":
+                echoCommand(tokens);
+                break;
+            case "cat":
+                catCommand(tokens);
+                break;
+            default:
+                System.out.println("Command not found: " + command);
+        }
+    }
 
-        for(String path : paths){
-            Path fullPath = Path.of(path, command);
-            if(Files.isRegularFile(fullPath)){
-                return fullPath.toString();
+    private static void echoCommand(String[] tokens) {
+        for (int i = 1; i < tokens.length; i++) {
+            System.out.print(tokens[i]);
+            if (i < tokens.length - 1) {
+                System.out.print(" "); // Add space between tokens
             }
         }
-        return null;
+        System.out.println(); // New line at the end
     }
 
-    //splitting by ':' - unix-like systems, ';' - Windows systems
-    private String getSystemSeparator(){
-        String systemOS = System.getProperty("os.name").toLowerCase();
-        return systemOS.contains("win")
-                ? ";"
-                : ":";
+    private static void catCommand(String[] tokens) {
+        for (int i = 1; i < tokens.length; i++) {
+            String fileName = tokens[i].replaceAll("^\"|\"$", ""); // Remove surrounding quotes
+            readFile(fileName);
+        }
     }
 
-    // when given a file that can be executed, execute with the parameter passed
-    public void execute(String input){
-        // get command to be found on env variables
-        String path = extractPath(input);
-
-        if(path != null){
-            String[] commandWithArgs = input.split(" ");
-            try{
-                // building a process with the valid args and showing on default output
-                ProcessBuilder builder = new ProcessBuilder(commandWithArgs);
-                Process process = builder.start();
-                process.getInputStream().transferTo(System.out);
-            }catch (IOException ioe){
-                ioe.printStackTrace();
+    private static void readFile(String fileName) {
+        try (BufferedReader br = new BufferedReader(new FileReader(fileName))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                System.out.print(line + " "); // Print file content
             }
-        }else{
-            String command = input.split(" ")[0];
-            System.out.println(command + ": command not found");
+        } catch (IOException e) {
+            System.out.println("Error reading file: " + fileName);
         }
     }
 
-    // print working directory
-    public void pwd(){
-        System.out.println(this.currentDirectory);
-    }
-
-    // change directory method
-    public void cd(String input) {
-        String pathReceived = input.split(" ")[1].trim();
-
-        // dealing with 'cd ~' to switch to home directory
-        if (pathReceived.equals("~")) {
-            pathReceived = System.getenv("HOME");
-        }
-
-        // crates a new path from the path received
-        Path formattedPath = Path.of(pathReceived);
-
-        //when path isn't absolute, has './' or '../' we need to resolve them
-        if(!formattedPath.isAbsolute()){
-            formattedPath = Path.of(currentDirectory).resolve(formattedPath);
-        }
-
-        formattedPath = formattedPath.normalize();
-
-        // if is not a directory log the error
-        if (!Files.isDirectory(formattedPath)) {
-                System.out.print("cd: " + pathReceived + ": No such file or directory\n");
-        } else {
-                // update the current directory of the controller
-                this.currentDirectory = formattedPath.normalize().toString();
-        }
-
+    private static void printPrompt() {
+        System.out.print("$ "); // Print the shell prompt
     }
 }
