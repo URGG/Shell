@@ -41,13 +41,18 @@ public class Main {
     }
 
     private static void executeExternalCommand(String input) {
-        String command = input.split(" ")[0];
+        String[] commandParts = input.split(" ");
+        String command = commandParts[0];
         String path = getPath(command);
+        
         if (path == null) {
             System.out.printf("%s: command not found%n", command);
         } else {
             try {
-                Process p = Runtime.getRuntime().exec(path + " " + input.substring(command.length()).trim());
+                // Use ProcessBuilder to handle command and arguments
+                ProcessBuilder processBuilder = new ProcessBuilder();
+                processBuilder.command(path, Arrays.copyOfRange(commandParts, 1, commandParts.length));
+                Process p = processBuilder.start();
                 p.getInputStream().transferTo(System.out);
                 p.getErrorStream().transferTo(System.err);
             } catch (Exception e) {
@@ -122,7 +127,7 @@ public class Main {
         for (String path : System.getenv("PATH").split(":")) {
             Path file = Path.of(path, input);
             if (Files.isReadable(file)) {
-                return file.toString();
+                return file .toString();
             }
         }
         return null;
