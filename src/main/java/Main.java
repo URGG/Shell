@@ -1,88 +1,80 @@
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
+import java.io.*;
+import java.nio.file.*;
+import java.util.*;
 
-public class Main{
-
-    private static String currentDirectory = System.getProperty("user.dir");
+public class Main {
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
+
         while (true) {
+            // Print prompt
             System.out.print("$ ");
             String input = scanner.nextLine();
+
+            // Exit if input is empty or contains only whitespace
             if (input.trim().isEmpty()) {
                 continue;
             }
+
+            // Exit shell if the user types "exit"
             if (input.equals("exit")) {
                 break;
             }
-            handleInput(input);
+
+            // Tokenize input, respecting quoted strings
+            List<String> tokens = tokenizeInput(input);
+
+            if (tokens.isEmpty()) {
+                continue;
+            }
+
+            // Handle commands
+            String command = tokens.get(0);
+            List<String> arguments = tokens.subList(1, tokens.size());
+
+            switch (command) {
+                case "echo":
+                    handleEcho(arguments);
+                    break;
+                case "cat":
+                    handleCat(arguments);
+                    break;
+                default:
+                    System.out.println(command + ": command not found");
+            }
         }
+
         scanner.close();
     }
 
-    private static void handleInput(String input) {
-        List<String> tokens = parseInput(input);
-        if (tokens.isEmpty()) {
-            return;
-        }
-        String command = tokens.get(0);
-        List<String> arguments = tokens.subList(1, tokens.size());
-
-        switch (command) {
-            case "echo":
-                handleEcho(arguments);
-                break;
-            case "cat":
-                handleCat(arguments);
-                break;
-            default:
-                System.out.println(command + ": command not found");
-        }
-    }
-
-    private static List<String> parseInput(String input) {
+    private static List<String> tokenizeInput(String input) {
         List<String> tokens = new ArrayList<>();
         StringBuilder currentToken = new StringBuilder();
-        boolean inSingleQuotes = false;
-        boolean inDoubleQuotes = false;
+        boolean inSingleQuote = false, inDoubleQuote = false;
 
         for (int i = 0; i < input.length(); i++) {
             char c = input.charAt(i);
 
-            if (inSingleQuotes) {
-                if (c == '\'') {
-                    inSingleQuotes = false;
-                } else {
-                    currentToken.append(c);
-                }
-            } else if (inDoubleQuotes) {
-                if (c == '"') {
-                    inDoubleQuotes = false;
-                } else if (c == '\\' && i + 1 < input.length() && "\"$".indexOf(input.charAt(i + 1)) >= 0) {
-                    currentToken.append(input.charAt(++i));
-                } else {
-                    currentToken.append(c);
+            if (c == '\'' && !inDoubleQuote) {
+                inSingleQuote = !inSingleQuote;
+                continue;
+            } else if (c == '"' && !inSingleQuote) {
+                inDoubleQuote = !inDoubleQuote;
+                continue;
+            }
+
+            if ((c == ' ' || c == '\t') && !inSingleQuote && !inDoubleQuote) {
+                if (currentToken.length() > 0) {
+                    tokens.add(currentToken.toString());
+                    currentToken.setLength(0);
                 }
             } else {
-                if (Character.isWhitespace(c)) {
-                    if (currentToken.length() > 0) {
-                        tokens.add(currentToken.toString());
-                        currentToken.setLength(0);
-                    }
-                } else if (c == '\'') {
-                    inSingleQuotes = true;
-                } else if (c == '"') {
-                    inDoubleQuotes = true;
-                } else {
-                    currentToken.append(c);
-                }
+                currentToken.append(c);
             }
         }
 
+        // Add the last token if any
         if (currentToken.length() > 0) {
             tokens.add(currentToken.toString());
         }
@@ -95,36 +87,22 @@ public class Main{
     }
 
     private static void handleCat(List<String> arguments) {
-        if (arguments.isEmpty()) {
-            System.out.println("cat: missing operand");
-            return;
-        }
-
-        StringBuilder output = new StringBuilder();
-
+        StringBuilder result = new StringBuilder();
         for (String filePath : arguments) {
-            File file = filePath.startsWith("/") ? new File(filePath) : new File(currentDirectory, filePath);
-
-            if (file.exists() && file.isFile()) {
-                try (Scanner fileScanner = new Scanner(file)) {
-                    while (fileScanner.hasNextLine()) {
-                        output.append(fileScanner.nextLine()).append(".");
-                    }
-                } catch (FileNotFoundException e) {
-                    System.out.println("cat: " + filePath + ": No such file");
-                    return;
+            try {
+                String content = Files.readString(Paths.get(filePath));
+                if (result.length() > 0) {
+                    result.append(".");
                 }
-            } else {
+                result.append(content);
+            } catch (IOException e) {
                 System.out.println("cat: " + filePath + ": No such file");
-                return;
             }
         }
-
-        if (output.length() > 0 && output.charAt(output.length() - 1) == '.') {
-            output.setLength(output.length() - 1);
+        if (result.length() > 0) {
+            System.out.println(result.toString());
         }
-
-        System.out.println(output);
     }
 }
+
 
