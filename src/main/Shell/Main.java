@@ -1,73 +1,61 @@
-import static command.Pwd.pwd;
-import static util.StringUtils.parseCommand;
 import java.io.File;
-import java.nio.file.Files;
+import java.util.Scanner;
 
+public class Main {
+    private static String currentDir = System.getProperty("user.dir"); // Start in the current working directory
 
-public class Main implements Strategy {
-    public static final String HOME_DIR = System.getenv("HOME");
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        String input;
 
-    @Override
-    public String command(String input) {
-        String[] tokens = parseCommand(input);
+        while (true) {
+            System.out.print(currentDir + " $ "); // Prompt with the current directory
+            input = scanner.nextLine();
+
+            if (input.equals("exit")) {
+                break; // Exit the loop on "exit" command
+            }
+
+            String result = changeDirectory(input);
+            if (result != null) {
+                System.out.println(result); // Print error messages if any
+            }
+        }
+
+        scanner.close();
+    }
+
+    private static String changeDirectory(String input) {
+        String[] tokens = input.split(" ");
         if (tokens.length > 1) {
             String dir = tokens[1];
-            dir = getAbsPath(dir);
-            return checkDir(dir);
+            String absPath = getAbsolutePath(dir);
+            return checkDirectory(absPath);
         }
-        return null; // No directory specified
+        return "cd: missing argument"; // Error if no directory is specified
     }
 
-    public static String getAbsPath(String dir) {
-        // Handle absolute path
-        if (dir.startsWith(File.separator)) {
-            return dir; // Return as is
-        } 
-        // Handle parent directory navigation
-        else if (dir.startsWith("..")) {
-            File currentDir = new File(pwd);
-            File moveTo = currentDir.getParentFile(); // Start from the current directory
-
-            // Split the path by "/"
-            String[] parts = dir.split(File.separator);
-            for (String part : parts) {
-                if (part.equals("..")) {
-                    moveTo = moveTo.getParentFile(); // Move up one directory
-                } else if (!part.isEmpty() && !part.equals(".")) {
-                    moveTo = new File(moveTo, part); // Move into the specified directory
-                }
-            }
-            return moveTo.getAbsolutePath(); // Return the resolved absolute path
-        } 
-        // Handle home directory
-        else if ("~".equals(dir)) {
-            return HOME_DIR; // Return home directory
-        } 
-        // Handle current directory
-        else if (dir.startsWith(".")) {
-            return new File(pwd, dir.substring(1)).getAbsolutePath(); // Current directory
-        } 
-        // Handle relative path
-        else {
-            return new File(pwd, dir).getAbsolutePath(); // Append to current working directory
+    private static String getAbsolutePath(String dir) {
+        if (dir.startsWith("/")) {
+            return dir; // Absolute path
+        } else if ("~".equals(dir)) {
+            return System.getProperty("user.home"); // Home directory
+        } else if (dir.startsWith(".")) {
+            return new File(currentDir, dir).getAbsolutePath(); // Current directory
+        } else if (dir.startsWith("..")) {
+            return new File(currentDir, dir).getAbsolutePath(); // Parent directory
+        } else {
+            return new File(currentDir, dir).getAbsolutePath(); // Relative path
         }
     }
 
-    private static String checkDir(String dir) {
+    private static String checkDirectory(String dir) {
         File file = new File(dir);
         if (file.exists() && file.isDirectory()) {
-            pwd = file.getAbsolutePath(); // Update the current working directory
+            currentDir = file.getAbsolutePath(); // Update current directory
             return null; // Successful change
         } else {
-            return String.format("cd: %s: No such file or directory%n", dir); // Error message
+            return String.format("cd: %s: No such file or directory", dir); // Error message
         }
-    }
-
-    // For testing purposes
-    public static void main(String[] args) {
-        String input = "cd /tmp/mango/raspberry/apple"; // Example input
-        Main cd = new Main();
-        String command = cd.command(input);
-        System.out.println(command); // Output the result of the command
     }
 }
