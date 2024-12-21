@@ -5,6 +5,7 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
+
 public class Main {
   private static File currentDirectory =
       new File(System.getProperty("user.dir"));
