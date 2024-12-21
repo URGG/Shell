@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Main { // Renamed class to Main
+public class Main { // Class name is Main
     public static void main(String[] args) {
         // Simulating input for testing
         String input = "echo \"quz  hello\"  \"bar\""; // Example input
