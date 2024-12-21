@@ -126,8 +126,7 @@ public class Main {
     private static String getPath(String input) {
         for (String path : System.getenv("PATH").split(":")) {
             Path file = Path.of(path, input);
-            if (Files.isReadable(file)) {
-                return file .toString();
+            if (Files.isReadable(file)) return file.toString();
             }
         }
         return null;
