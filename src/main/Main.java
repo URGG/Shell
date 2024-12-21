@@ -3,7 +3,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 
-public class Main{
+public class main{
     public static void main(String[] args) {
         // Example arguments; replace with actual arguments or integrate argument handling
         handleCat(List.of("/path/to/file1", "/path/to/file2", "/path/to/file3"));
