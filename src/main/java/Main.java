@@ -9,7 +9,7 @@ import java.util.Scanner;
 public class Main {
     private static File currentDirectory = new File(System.getProperty("user.dir"));
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
         while (true) {
             System.out.print("$ ");
@@ -126,7 +126,8 @@ public class Main {
     private static String getPath(String input) {
         for (String path : System.getenv("PATH").split(":")) {
             Path file = Path.of(path, input);
-            if (Files.isReadable(file)) return file.toString();
+            if (Files.isReadable(file)) {
+                return file.toString();
             }
         }
         return null;
