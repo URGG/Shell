@@ -99,7 +99,7 @@ public class Main {
             try {
                 String content = Files.readString(Paths.get(filePath));
                 if (!isFirstContent) {
-                    result.append("."); // Append '.' only after the first content
+                    result.append(""); // Append '.' only after the first content
                 }
                 result.append(content);
                 isFirstContent = false; // Update flag after adding content
