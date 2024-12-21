@@ -93,27 +93,29 @@ public class Main {
 
     private static void handleCat(List<String> arguments) {
         StringBuilder result = new StringBuilder();
-        boolean isFirstContent = true; // Track if this is the first valid content
+        boolean isFirstFile = true; // Flag to check if it's the first valid file
     
         for (String filePath : arguments) {
             try {
+                // Read the file content
                 String content = Files.readString(Paths.get(filePath));
-                if (!isFirstContent) {
-                    result.append("."); // Append '.' only after the first content
+                if (!isFirstFile) {
+                    result.append("."); // Add a dot before appending content for non-first files
                 }
                 result.append(content);
-                isFirstContent = false; // Update flag after adding content
+                isFirstFile = false; // After successfully adding the first content, update the flag
             } catch (IOException e) {
-                // Handle missing files gracefully
+                // Print error for missing files
                 System.out.println("cat: " + filePath + ": No such file");
             }
         }
     
-        // Print the result if there is content
+        // Only print the result if there's content
         if (result.length() > 0) {
-            System.out.println(result.toString().trim());
+            System.out.println(result.toString());
         }
     }
+    
     
    
 }
