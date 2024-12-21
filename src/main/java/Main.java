@@ -93,19 +93,20 @@ public class Main {
 
     private static void handleCat(List<String> arguments) {
         StringBuilder result = new StringBuilder();
+        boolean isFirstContent = true; // Track if it's the first non-empty content
     
-        for (int i = 0; i < arguments.size(); i++) {
-            String filePath = arguments.get(i);
+        for (String filePath : arguments) {
             try {
-                // Read the file content
+                // Read the file content and trim whitespace
                 String content = Files.readString(Paths.get(filePath)).trim();
     
-                // Append the content if it's not empty
+                // Append content if it's not empty
                 if (!content.isEmpty()) {
-                    if (result.length() > 0) {
-                        result.append("."); // Add dot only between non-empty contents
+                    if (!isFirstContent) {
+                        result.append("."); // Append dot only after the first content
                     }
                     result.append(content);
+                    isFirstContent = false; // Mark that the first content is handled
                 }
             } catch (IOException e) {
                 // Print error for missing files
@@ -116,6 +117,7 @@ public class Main {
         // Print the final concatenated result
         System.out.println(result.toString());
     }
+    
     
     
     
