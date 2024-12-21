@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
-import java.lang.ProcessBuilder;
+import java.lang.*;
 
 public class Main {
     private static File currentDirectory = new File(System.getProperty("user.dir"));
