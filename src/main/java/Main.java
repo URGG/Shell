@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Shell {
+public class Main{
     public static void main(String[] args) {
         // Simulating input for testing
         String input = "echo \"quz  hello\"  \"bar\""; // Example input
