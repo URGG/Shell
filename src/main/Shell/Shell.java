@@ -4,7 +4,7 @@ import java.nio.file.Paths;
 import java.util.List;
 
 public class Shell {
-    public static void main(String[] args) {
+    public static void Main(String[] args) {
         // Example arguments; replace with actual arguments or integrate argument handling
         List<String> filePaths = List.of("/path/to/file1", "/path/to/file2", "/path/to/file3");
         handleCat(filePaths);
