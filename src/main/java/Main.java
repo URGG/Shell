@@ -100,26 +100,23 @@ public class Main {
                 // Read the file content
                 String content = Files.readString(Paths.get(filePath)).trim();
     
-                // Append the content to the result
-                if (content.isEmpty()) {
-                    continue; // Skip empty files
+                // Append the content if it's not empty
+                if (!content.isEmpty()) {
+                    if (result.length() > 0) {
+                        result.append("."); // Add dot only between non-empty contents
+                    }
+                    result.append(content);
                 }
-    
-                if (result.length() > 0) {
-                    result.append("."); // Add a dot only if it's not the first content
-                }
-                result.append(content);
             } catch (IOException e) {
                 // Print error for missing files
                 System.out.println("cat: " + filePath + ": No such file");
             }
         }
     
-        // Only print the result if there's content
-        if (result.length() > 0) {
-            System.out.println(result.toString());
-        }
+        // Print the final concatenated result
+        System.out.println(result.toString());
     }
+    
     
     
     
