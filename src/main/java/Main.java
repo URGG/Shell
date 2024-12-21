@@ -23,57 +23,75 @@ public class Main {
                 System.out.println(String.join(" ", arguments));
             } else if (input.startsWith("type ")) {
                 List<String> builtInCommands = Arrays.asList("echo", "type", "exit", "pwd", "cd");
-                if (builtInCommands.contains(input.substring(5))) {
-                    System.out.println(input.substring(5) + " is a shell builtin");
-                } else if (System.getenv("PATH") != null) {
-                    String pathEnv = System.getenv("PATH");
-                    String[] paths = pathEnv.split(":");
-                    boolean found = false;
-                    for (String path : paths) {
-                        File file = new File(path + "/" + input.substring(5));
-                        if (file.exists() && file.canExecute()) {
-                            System.out.println(input.substring(5) + " is " + file.getAbsolutePath());
-                            found = true;
-                            break;
-                        }
-                    }
-                    if (!found) {
-                        System.out.println(input.substring(5) + ": not found");
-                    }
+                String command = input.substring(5).trim();
+                if (builtInCommands.contains(command)) {
+                    System.out.println(command + " is a shell builtin");
                 } else {
-                    System.out.println(input.substring(5) + ": not found");
+                    checkExecutable(command);
                 }
             } else if (input.equals("pwd")) {
                 System.out.println(currentDirectory.getAbsolutePath());
-            } else if (input.startsWith("cd")) {
-                String[] words = input.split(" ");
-                String path = words[1];
-                File newDirectory;
-                if (path.startsWith("/")) {
-                    // Absolute path
-                    newDirectory = new File(path);
-                } else if (path.equals("~")) {
-                    newDirectory = new File(System.getenv("HOME"));
-                } else {
-                    // Relative path
-                    newDirectory = currentDirectory.toPath().resolve(path).normalize().toFile();
-                }
-                if (newDirectory.exists() && newDirectory.isDirectory()) {
-                    currentDirectory = newDirectory;
-                } else {
-                    System.out.println("cd: " + path + ": No such file or directory");
-                }
+            } else if (input.startsWith("cd ")) {
+                String path = input.substring(3).trim();
+                changeDirectory(path);
             } else {
-                String command = input.split(" ")[0];
-                String path = getPath(command);
-                if (path == null) {
-                    System.out.printf("%s: command not found%n", command);
-                } else {
-                    String fullPath = path + input.substring(command.length());
-                    Process p = Runtime.getRuntime().exec(fullPath.split(" "));
-                    p.getInputStream().transferTo(System.out);
+                executeExternalCommand(input);
+            }
+        }
+    }
+
+    private static void executeExternalCommand(String input) {
+        String command = input.split(" ")[0];
+        String path = getPath(command);
+        if (path == null) {
+            System.out.printf("%s: command not found%n", command);
+        } else {
+            try {
+                Process p = Runtime.getRuntime().exec(path + " " + input.substring(command.length()).trim());
+                p.getInputStream().transferTo(System.out);
+                p.getErrorStream().transferTo(System.err);
+            } catch (Exception e) {
+                System.out.println("Error executing command: " + e.getMessage());
+            }
+        }
+    }
+
+    private static void changeDirectory(String path) {
+        File newDirectory;
+        if (path.startsWith("/")) {
+            // Absolute path
+            newDirectory = new File(path);
+        } else if (path.equals("~")) {
+            newDirectory = new File(System.getenv("HOME"));
+        } else {
+            // Relative path
+            newDirectory = currentDirectory.toPath().resolve(path).normalize().toFile();
+        }
+        if (newDirectory.exists() && newDirectory.isDirectory()) {
+            currentDirectory = newDirectory;
+        } else {
+            System.out.println("cd: " + path + ": No such file or directory");
+        }
+    }
+
+    private static void checkExecutable(String command) {
+        if (System.getenv("PATH") != null) {
+            String pathEnv = System.getenv("PATH");
+            String[] paths = pathEnv.split(":");
+            boolean found = false;
+            for (String path : paths) {
+                File file = new File(path + "/" + command);
+                if (file.exists() && file.canExecute()) {
+                    System.out.println(command + " is " + file.getAbsolutePath());
+                    found = true;
+                    break;
                 }
             }
+            if (!found) {
+                System.out.println(command + ": not found");
+            }
+        } else {
+            System.out.println(command + ": not found");
         }
     }
 
