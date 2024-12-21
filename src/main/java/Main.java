@@ -1,100 +1,88 @@
- // Adjust the package name as needed
-
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
-
 public class Main {
-    private static File currentDirectory = new File(System.getProperty("user.dir"));
-
-    public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-        while (true) {
-            System.out.print("$ ");
-            String input = scanner.nextLine();
-            if (input.equals("exit 0")) {
-                scanner.close();
-                break;
-            } else if (input.startsWith("echo ")) {
-                List<String> arguments = parseInput(input.substring(5));
-                System.out.println(String.join(" ", arguments));
-            } else if (input.equals("pwd")) {
-                System.out.println(currentDirectory.getAbsolutePath());
-            } else if (input.startsWith("cd ")) {
-                changeDirectory(input.substring(3).trim());
-            } else {
-                executeExternalCommand(input);
+  private static File currentDirectory =
+      new File(System.getProperty("user.dir"));
+  public static void main(String[] args) throws Exception {
+    while (true) {
+      System.out.print("$ ");
+      Scanner scanner = new Scanner(System.in);
+      String input = scanner.nextLine();
+      if (input.equals("exit 0")) {
+        scanner.close();
+        break;
+      } else if (input.startsWith("echo ")) {
+        System.out.println(input.substring(5));
+      } else if (input.startsWith("type ")) {
+        List<String> builtInCommands =
+            Arrays.asList("echo", "type", "exit", "pwd", "cd");
+        if (builtInCommands.contains(input.substring(5))) {
+          System.out.println(input.substring(5) + " is a shell builtin");
+        } else if (System.getenv("PATH") != null) {
+          String pathEnv = System.getenv("PATH");
+          String[] paths = pathEnv.split(":");
+          boolean found = false;
+          for (String path : paths) {
+            File file = new File(path + "/" + input.substring(5));
+            if (file.exists() && file.canExecute()) {
+              System.out.println(input.substring(5) + " is " +
+                                 file.getAbsolutePath());
+              found = true;
+              break;
             }
-        }
-    }
-
-    private static void executeExternalCommand(String input) {
-        String[] commandParts = input.split(" ");
-        String command = commandParts[0];
-        String path = getPath(command);
-        
-        if (path == null) {
-            System.out.printf("%s: command not found%n", command);
+          }
+          if (!found) {
+            System.out.println(input.substring(5) + ": not found");
+          }
         } else {
-            try {
-                ProcessBuilder processBuilder = new ProcessBuilder();
-                processBuilder.command(path, Arrays.copyOfRange(commandParts, 1, commandParts.length));
-                Process p = processBuilder.start();
-                p.getInputStream().transferTo(System.out);
-                p.getErrorStream().transferTo(System.err);
-            } catch (Exception e) {
-                System.out.println("Error executing command: " + e.getMessage());
-            }
+          System.out.println(input.substring(5) + ": not found");
         }
-    }
-
-    private static void changeDirectory(String path) {
-        File newDirectory = new File(path);
+      } else if (input.equals("pwd")) {
+        System.out.println(currentDirectory.getAbsolutePath());
+      } else if (input.startsWith("cd")) {
+        String[] words = input.split(" ");
+        String path = words[1];
+        File newDirectory;
+        if (path.startsWith("/")) {
+          // Absolute path
+          newDirectory = new File(path);
+        } else if (path.equals("~")) {
+          
+          newDirectory = new File(System.getenv("HOME"));
+        } else {
+          // Relative path
+          newDirectory =
+              currentDirectory.toPath().resolve(path).normalize().toFile();
+        }
         if (newDirectory.exists() && newDirectory.isDirectory()) {
-            currentDirectory = newDirectory;
+          currentDirectory = newDirectory;
         } else {
-            System.out.println("cd: " + path + ": No such file or directory");
+          System.out.println("cd: " + path + ": No such file or directory");
         }
+      } else {
+        String command = input.split(" ")[0];
+        String path = getPath(command);
+        if (path == null) {
+          System.out.printf("%s: command not found%n", command);
+        } else {
+          String fullPath = path + input.substring(command.length());
+          Process p = Runtime.getRuntime().exec(fullPath.split(" "));
+          p.getInputStream().transferTo(System.out);
+        }
+      }
     }
-
-    private static String getPath(String command) ```java
-{
-        String pathEnv = System.getenv("PATH");
-        if (pathEnv != null) {
-            for (String path : pathEnv.split(":")) {
-                File file = new File(path, command);
-                if (file.exists() && file.canExecute()) {
-                    return file.getAbsolutePath();
-                }
-            }
-        }
-        return null;
+  }
+  private static String getPath(String input) {
+    for (String path : System.getenv("PATH").split(":")) {
+      Path file = Path.of(path, input);
+      if (Files.isReadable(file)) {
+        return file.toString();
+      }
     }
-
-    private static List<String> parseInput(String input) {
-        List<String> tokens = new ArrayList<>();
-        StringBuilder currentToken = new StringBuilder();
-        boolean inQuotes = false;
-
-        for (char c : input.toCharArray()) {
-            if (c == '"') {
-                inQuotes = !inQuotes; // Toggle the inQuotes flag
-            } else if (c == ' ' && !inQuotes) {
-                if (currentToken.length() > 0) {
-                    tokens.add(currentToken.toString());
-                    currentToken.setLength(0); // Reset the current token
-                }
-            } else {
-                currentToken.append(c);
-            }
-        }
-        if (currentToken.length() > 0) {
-            tokens.add(currentToken.toString()); // Add the last token
-        }
-        return tokens;
-    }
+    return null;
+  }
 }
