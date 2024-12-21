@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Main{
+public class Shell {
     public static void main(String[] args) {
         // Simulating input for testing
         String input = "echo \"quz  hello\"  \"bar\""; // Example input
@@ -12,6 +12,9 @@ public class Main{
         
         // Execute commands based on tokens
         executeCommand(tokens);
+        
+        // Print the prompt after command execution
+        printPrompt();
     }
 
     private static String[] parseInput(String input) {
@@ -92,5 +95,9 @@ public class Main{
         } catch (IOException e) {
             System.out.println("Error reading file: " + fileName);
         }
+    }
+
+    private static void printPrompt() {
+        System.out.print("$ "); // Print the shell prompt
     }
 }
