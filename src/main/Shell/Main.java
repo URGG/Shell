@@ -8,7 +8,7 @@ public class Main{
   public static final char DOUBLE = '"';
   private final CharacterIterator iterator;
   private final StringBuilder stringBuilder;
-  public LineParser(String line) {
+  public Main (String line) {
     this.iterator = new StringCharacterIterator(line);
     this.stringBuilder = new StringBuilder(line.length());
   }
