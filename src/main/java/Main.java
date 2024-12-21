@@ -1,3 +1,5 @@
+ // Adjust the package name as needed
+
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -59,7 +61,8 @@ public class Main {
         }
     }
 
-    private static String getPath(String command) {
+    private static String getPath(String command) ```java
+{
         String pathEnv = System.getenv("PATH");
         if (pathEnv != null) {
             for (String path : pathEnv.split(":")) {
