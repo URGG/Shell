@@ -1,6 +1,9 @@
-import java.io.*;
-import java.nio.file.*;
-import java.util.*;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
 
 public class Main {
 
@@ -86,23 +89,31 @@ public class Main {
         System.out.println(String.join(" ", arguments));
     }
 
+
+
     private static void handleCat(List<String> arguments) {
         StringBuilder result = new StringBuilder();
+        boolean firstFile = true; // Track if this is the first file being processed
+    
         for (String filePath : arguments) {
             try {
                 String content = Files.readString(Paths.get(filePath));
-                if (result.length() > 0) {
-                    result.append(".");
+                if (!firstFile) {
+                    result.append("."); // Append '.' only after the first file
                 }
                 result.append(content);
+                firstFile = false; // Mark that at least one file has been processed
             } catch (IOException e) {
                 System.out.println("cat: " + filePath + ": No such file");
             }
         }
+    
+        // Print the result if any content was appended
         if (result.length() > 0) {
             System.out.println(result.toString());
         }
     }
+   
 }
 
 
