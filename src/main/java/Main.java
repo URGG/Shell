@@ -19,21 +19,11 @@ public class Main {
                 break;
             } else if (input.startsWith("echo ")) {
                 List<String> arguments = parseInput(input.substring(5));
-                // Print the arguments without additional quotes
                 System.out.println(String.join(" ", arguments));
-            } else if (input.startsWith("type ")) {
-                List<String> builtInCommands = Arrays.asList("echo", "type", "exit", "pwd", "cd");
-                String command = input.substring(5).trim();
-                if (builtInCommands.contains(command)) {
-                    System.out.println(command + " is a shell builtin");
-                } else {
-                    checkExecutable(command);
-                }
             } else if (input.equals("pwd")) {
                 System.out.println(currentDirectory.getAbsolutePath());
             } else if (input.startsWith("cd ")) {
-                String path = input.substring(3).trim();
-                changeDirectory(path);
+                changeDirectory(input.substring(3).trim());
             } else {
                 executeExternalCommand(input);
             }
@@ -49,7 +39,6 @@ public class Main {
             System.out.printf("%s: command not found%n", command);
         } else {
             try {
-                // Use ProcessBuilder to handle command and arguments
                 ProcessBuilder processBuilder = new ProcessBuilder();
                 processBuilder.command(path, Arrays.copyOfRange(commandParts, 1, commandParts.length));
                 Process p = processBuilder.start();
@@ -62,16 +51,7 @@ public class Main {
     }
 
     private static void changeDirectory(String path) {
-        File newDirectory;
-        if (path.startsWith("/")) {
-            // Absolute path
-            newDirectory = new File(path);
-        } else if (path.equals("~")) {
-            newDirectory = new File(System.getenv("HOME"));
-        } else {
-            // Relative path
-            newDirectory = currentDirectory.toPath().resolve(path).normalize().toFile();
-        }
+        File newDirectory = new File(path);
         if (newDirectory.exists() && newDirectory.isDirectory()) {
             currentDirectory = newDirectory;
         } else {
@@ -79,25 +59,17 @@ public class Main {
         }
     }
 
-    private static void checkExecutable(String command) {
-        if (System.getenv("PATH") != null) {
-            String pathEnv = System.getenv("PATH");
-            String[] paths = pathEnv.split(":");
-            boolean found = false;
-            for (String path : paths) {
-                File file = new File(path + "/" + command);
+    private static String getPath(String command) {
+        String pathEnv = System.getenv("PATH");
+        if (pathEnv != null) {
+            for (String path : pathEnv.split(":")) {
+                File file = new File(path, command);
                 if (file.exists() && file.canExecute()) {
-                    System.out.println(command + " is " + file.getAbsolutePath());
-                    found = true;
-                    break;
+                    return file.getAbsolutePath();
                 }
             }
-            if (!found) {
-                System.out.println(command + ": not found");
-            }
-        } else {
-            System.out.println(command + ": not found");
         }
+        return null;
     }
 
     private static List<String> parseInput(String input) {
@@ -121,13 +93,5 @@ public class Main {
             tokens.add(currentToken.toString()); // Add the last token
         }
         return tokens;
-    }
-
-    private static String getPath(String input) {
-        for (String path : System.getenv("PATH").split(":")) {
-            Path file = Path.of(path, input);
-            if (Files.isReadable(file)) return file.toString();
-        }
-        return null;
     }
 }
