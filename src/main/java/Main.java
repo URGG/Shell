@@ -1,7 +1,7 @@
 import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
 import java.util.ArrayList;
-public class LineParser {
+public class Main{
   public static final char SPACE = ' ';
   public static final char SINGLE = '\'';
   public static final char DOUBLE = '"';
