@@ -125,6 +125,7 @@ public class Main {
 
     private static void handleCd(List<String> args) {
         if (args.isEmpty()) {
+            // If no argument is provided, change to the user's home directory
             currentDirectory = new File(System.getProperty("user.home"));
             return;
         }
