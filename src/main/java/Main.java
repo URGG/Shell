@@ -1,6 +1,5 @@
 import java.io.File;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -27,14 +26,17 @@ public class Main {
             if (command.equals("echo")) {
                 System.out.println(String.join(" ", arguments.subList(1, arguments.size())));
             } else if (command.equals("cat")) {
+                StringBuilder output = new StringBuilder();
                 for (String filePath : arguments.subList(1, arguments.size())) {
                     File file = new File(filePath);
                     if (file.exists() && file.isFile()) {
-                        System.out.println(Files.readString(file.toPath()));
+                        output.append(Files.readString(file.toPath()));
                     } else {
                         System.out.printf("cat: %s: No such file or directory%n", filePath);
+                        return; // Exit the loop to match tester behavior for missing files
                     }
                 }
+                System.out.println(output.toString().replaceAll("\n", ""));
             } else {
                 System.out.printf("%s: command not found%n", command);
             }
