@@ -8,8 +8,7 @@ import java.util.Scanner;
 public class Main {
 
     private static File currentDirectory = new File(System.getProperty("user.dir"));
-    private static File homeDirectory = new File("/tmp/orange/apple/pineapple");  // Correct custom home directory for testing
-    private static File fallbackHomeDirectory = new File("/tmp");  // Fallback directory
+    private static File homeDirectory = new File("/tmp/pear/pear/blueberry");  // Set home directory for testing
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
@@ -127,46 +126,40 @@ public class Main {
 
     private static void handleCd(List<String> args) {
         if (args.isEmpty()) {
-            // If no argument is provided, change to the home directory (custom home directory or fallback)
+            // If no argument is provided, change to the home directory
             if (homeDirectory.exists() && homeDirectory.isDirectory()) {
                 currentDirectory = homeDirectory;
             } else {
                 System.out.println("cd: " + homeDirectory.getAbsolutePath() + ": No such file or directory");
-                // Fallback to the fallback directory
-                currentDirectory = fallbackHomeDirectory;
+                return;
             }
-            return;
-        }
-
-        String path = args.get(0);
-
-        // Handle ~ (tilde) shorthand for the user's home directory
-        if (path.startsWith("~")) {
-            // Ensure that ~ expands to the correct home directory path (use custom home directory or fallback)
-            if (homeDirectory.exists() && homeDirectory.isDirectory()) {
-                path = homeDirectory.getAbsolutePath() + path.substring(1);
-            } else {
-                path = fallbackHomeDirectory.getAbsolutePath() + path.substring(1);
-            }
-        }
-
-        // Handle quoted paths
-        if ((path.startsWith("\"") && path.endsWith("\"")) ||
-            (path.startsWith("'") && path.endsWith("'"))) {
-            path = path.substring(1, path.length() - 1);
-        }
-
-        File newDir = new File(path);
-
-        if (!newDir.isAbsolute()) {
-            // Resolve relative to current directory
-            newDir = new File(currentDirectory, path);
-        }
-
-        if (newDir.exists() && newDir.isDirectory()) {
-            currentDirectory = newDir;
         } else {
-            System.out.printf("cd: %s: No such file or directory%n", path);
+            String path = args.get(0);
+
+            // Handle ~ (tilde) shorthand for the user's home directory
+            if (path.startsWith("~")) {
+                // Ensure that ~ expands to the correct home directory path
+                path = homeDirectory.getAbsolutePath() + path.substring(1);
+            }
+
+            // Handle quoted paths
+            if ((path.startsWith("\"") && path.endsWith("\"")) ||
+                (path.startsWith("'") && path.endsWith("'"))) {
+                path = path.substring(1, path.length() - 1);
+            }
+
+            File newDir = new File(path);
+
+            if (!newDir.isAbsolute()) {
+                // Resolve relative to current directory
+                newDir = new File(currentDirectory, path);
+            }
+
+            if (newDir.exists() && newDir.isDirectory()) {
+                currentDirectory = newDir;
+            } else {
+                System.out.printf("cd: %s: No such file or directory%n", path);
+            }
         }
     }
 
