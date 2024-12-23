@@ -6,7 +6,7 @@ import java.nio.file.Files;
 import static command.Pwd.pwd;
 import static util.StringUtils.parseCommand;
 
-public class cd implements Strategy {
+public class Cd implements Strategy {
     public static final String HOME_DIR = System.getenv("HOME");
 
     @Override

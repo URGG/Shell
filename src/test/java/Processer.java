@@ -1,9 +1,6 @@
 import command.Strategy;
 
-/**
- * @Author: tongqianwen
- * @Date: 2024/12/3
- */
+
 public class Processer {
     private Strategy strategy;
 
