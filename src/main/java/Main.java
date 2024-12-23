@@ -88,14 +88,19 @@ public class Main {
         StringBuilder output = new StringBuilder();
 
         for (String filePath : files) {
-            // Strip quotes from the file path if they exist
-            if ((filePath.startsWith("\"") && filePath.endsWith("\"")) || 
+            // Handle quoted paths correctly
+            if ((filePath.startsWith("\"") && filePath.endsWith("\"")) ||
                 (filePath.startsWith("'") && filePath.endsWith("'"))) {
                 filePath = filePath.substring(1, filePath.length() - 1);
             }
 
-            // Resolve the file path relative to the current directory
-            File file = new File(currentDirectory, filePath);
+            // Resolve the absolute file path
+            File file = new File(filePath);
+
+            if (!file.isAbsolute()) {
+                // Resolve relative to current directory
+                file = new File(currentDirectory, filePath);
+            }
 
             if (file.exists() && file.isFile()) {
                 try {
@@ -111,7 +116,7 @@ public class Main {
             }
         }
 
-        // Print the concatenated file contents without line breaks
+        // Print the concatenated output without line breaks
         System.out.print(output.toString());
     }
 
@@ -123,13 +128,18 @@ public class Main {
 
         String path = args.get(0);
 
-        // Strip quotes from the path if they exist
-        if ((path.startsWith("\"") && path.endsWith("\"")) || 
+        // Handle quoted paths
+        if ((path.startsWith("\"") && path.endsWith("\"")) ||
             (path.startsWith("'") && path.endsWith("'"))) {
             path = path.substring(1, path.length() - 1);
         }
 
-        File newDir = new File(currentDirectory, path);
+        File newDir = new File(path);
+
+        if (!newDir.isAbsolute()) {
+            // Resolve relative to current directory
+            newDir = new File(currentDirectory, path);
+        }
 
         if (newDir.exists() && newDir.isDirectory()) {
             currentDirectory = newDir;
