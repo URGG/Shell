@@ -131,6 +131,11 @@ public class Main {
 
         String path = args.get(0);
 
+        // Handle ~ (tilde) shorthand for the user's home directory
+        if (path.startsWith("~")) {
+            path = System.getProperty("user.home") + path.substring(1);
+        }
+
         // Handle quoted paths
         if ((path.startsWith("\"") && path.endsWith("\"")) ||
             (path.startsWith("'") && path.endsWith("'"))) {
