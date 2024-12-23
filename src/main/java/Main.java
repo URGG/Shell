@@ -31,6 +31,9 @@ public class Main {
                 case "cat":
                     handleCat(arguments);
                     break;
+                case "pwd":
+                    handlePwd();
+                    break;
                 case "cd":
                     handleCd(arguments);
                     break;
@@ -146,5 +149,10 @@ public class Main {
         } else {
             System.out.printf("cd: %s: No such file or directory%n", path);
         }
+    }
+
+    private static void handlePwd() {
+        // Output the current working directory
+        System.out.println(currentDirectory.getAbsolutePath());
     }
 }
