@@ -1,88 +1,101 @@
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+
 public class Main {
-  private static File currentDirectory =
-      new File(System.getProperty("user.dir"));
-  public static void main(String[] args) throws Exception {
-    while (true) {
-      System.out.print("$ ");
-      Scanner scanner = new Scanner(System.in);
-      String input = scanner.nextLine();
-      if (input.equals("exit 0")) {
-        scanner.close();
-        break;
-      } else if (input.startsWith("echo ")) {
-        System.out.println(input.substring(5));
-      } else if (input.startsWith("type ")) {
-        List<String> builtInCommands =
-            Arrays.asList("echo", "type", "exit", "pwd", "cd");
-        if (builtInCommands.contains(input.substring(5))) {
-          System.out.println(input.substring(5) + " is a shell builtin");
-        } else if (System.getenv("PATH") != null) {
-          String pathEnv = System.getenv("PATH");
-          String[] paths = pathEnv.split(":");
-          boolean found = false;
-          for (String path : paths) {
-            File file = new File(path + "/" + input.substring(5));
-            if (file.exists() && file.canExecute()) {
-              System.out.println(input.substring(5) + " is " +
-                                 file.getAbsolutePath());
-              found = true;
-              break;
+    private static File currentDirectory = new File(System.getProperty("user.dir"));
+
+    public static void main(String[] args) throws Exception {
+        while (true) {
+            System.out.print("$ ");
+            Scanner scanner = new Scanner(System.in);
+            String input = scanner.nextLine();
+
+            if (input.equals("exit 0")) {
+                scanner.close();
+                break;
             }
-          }
-          if (!found) {
-            System.out.println(input.substring(5) + ": not found");
-          }
-        } else {
-          System.out.println(input.substring(5) + ": not found");
+
+            List<String> arguments = parseArguments(input);
+            if (arguments.isEmpty()) continue;
+
+            String command = arguments.get(0);
+
+            if (command.equals("echo")) {
+                System.out.println(String.join(" ", arguments.subList(1, arguments.size())));
+            } else if (command.equals("cat")) {
+                for (String filePath : arguments.subList(1, arguments.size())) {
+                    File file = new File(filePath);
+                    if (file.exists() && file.isFile()) {
+                        System.out.println(Files.readString(file.toPath()));
+                    } else {
+                        System.out.printf("cat: %s: No such file or directory%n", filePath);
+                    }
+                }
+            } else {
+                System.out.printf("%s: command not found%n", command);
+            }
         }
-      } else if (input.equals("pwd")) {
-        System.out.println(currentDirectory.getAbsolutePath());
-      } else if (input.startsWith("cd")) {
-        String[] words = input.split(" ");
-        String path = words[1];
-        File newDirectory;
-        if (path.startsWith("/")) {
-          // Absolute path
-          newDirectory = new File(path);
-        } else if (path.equals("~")) {
-          
-          newDirectory = new File(System.getenv("HOME"));
-        } else {
-          // Relative path
-          newDirectory =
-              currentDirectory.toPath().resolve(path).normalize().toFile();
-        }
-        if (newDirectory.exists() && newDirectory.isDirectory()) {
-          currentDirectory = newDirectory;
-        } else {
-          System.out.println("cd: " + path + ": No such file or directory");
-        }
-      } else {
-        String command = input.split(" ")[0];
-        String path = getPath(command);
-        if (path == null) {
-          System.out.printf("%s: command not found%n", command);
-        } else {
-          String fullPath = path + input.substring(command.length());
-          Process p = Runtime.getRuntime().exec(fullPath.split(" "));
-          p.getInputStream().transferTo(System.out);
-        }
-      }
     }
-  }
-  private static String getPath(String input) {
-    for (String path : System.getenv("PATH").split(":")) {
-      Path file = Path.of(path, input);
-      if (Files.isReadable(file)) {
-        return file.toString();
-      }
+
+    /**
+     * Parses input into arguments, handling double-quoted strings and escape sequences.
+     * 
+     * @param input the raw input string
+     * @return a list of parsed arguments
+     */
+    private static List<String> parseArguments(String input) {
+        List<String> arguments = new ArrayList<>();
+        StringBuilder currentArg = new StringBuilder();
+        boolean inQuotes = false;
+        char quoteChar = '"'; // Default to handle double quotes
+
+        for (int i = 0; i < input.length(); i++) {
+            char c = input.charAt(i);
+
+            if (inQuotes) {
+                if (c == quoteChar) {
+                    // End of quoted string
+                    inQuotes = false;
+                } else if (c == '\\') {
+                    // Handle escaped characters
+                    if (i + 1 < input.length()) {
+                        char next = input.charAt(i + 1);
+                        if (next == '"' || next == '\\' || next == '$') {
+                            currentArg.append(next);
+                            i++; // Skip next character
+                        } else {
+                            currentArg.append(c); // Preserve backslash
+                        }
+                    }
+                } else {
+                    currentArg.append(c); // Append literal character
+                }
+            } else {
+                if (c == '"' || c == '\'') {
+                    // Start of quoted string
+                    inQuotes = true;
+                    quoteChar = c;
+                } else if (c == ' ') {
+                    // End of argument
+                    if (currentArg.length() > 0) {
+                        arguments.add(currentArg.toString());
+                        currentArg.setLength(0);
+                    }
+                } else {
+                    currentArg.append(c); // Append literal character
+                }
+            }
+        }
+
+        // Add the last argument if any
+        if (currentArg.length() > 0) {
+            arguments.add(currentArg.toString());
+        }
+
+        return arguments;
     }
-    return null;
-  }
 }
