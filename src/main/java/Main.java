@@ -8,7 +8,7 @@ import java.util.Scanner;
 public class Main {
 
     private static File currentDirectory = new File(System.getProperty("user.dir"));
-    private static File homeDirectory = new File("/tmp/pear/pear/blueberry");  // Set home directory for testing
+    private static File homeDirectory = new File(System.getProperty("user.home"));  // Default home directory
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
