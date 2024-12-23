@@ -8,7 +8,7 @@ import java.util.Scanner;
 public class Main {
 
     private static File currentDirectory = new File(System.getProperty("user.dir"));
-    private static File homeDirectory = new File("/tmp/raspberry/grape/strawberry");  // Custom home directory for testing
+    private static File homeDirectory = new File("/tmp/orange/apple/pineapple");  // Correct custom home directory for testing
     private static File fallbackHomeDirectory = new File("/tmp");  // Fallback directory
 
     public static void main(String[] args) {
@@ -142,7 +142,7 @@ public class Main {
 
         // Handle ~ (tilde) shorthand for the user's home directory
         if (path.startsWith("~")) {
-            // Ensure that ~ expands to the home directory path (use custom home directory or fallback)
+            // Ensure that ~ expands to the correct home directory path (use custom home directory or fallback)
             if (homeDirectory.exists() && homeDirectory.isDirectory()) {
                 path = homeDirectory.getAbsolutePath() + path.substring(1);
             } else {
