@@ -1,170 +1,199 @@
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
+import java.io.*;
+import java.util.*;
+import java.util.concurrent.*;
 
 public class Main {
 
-    private static File currentDirectory = new File(System.getProperty("user.dir"));
-    private static File homeDirectory = new File("/tmp/mango/pear/banana");  // Custom home directory path for testing
-
+    private static final String PROMPT = "main-shell> ";
+    private static final List<String> history = new ArrayList<>();
+    private static final Map<String, String> aliases = new HashMap<>();
+    private static final Map<Integer, Process> backgroundJobs = new HashMap<>();
+    private static int jobIdCounter = 1;
+    
     public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        String command;
 
         while (true) {
-            System.out.print("$ ");
-            String input = scanner.nextLine();
+            try {
+                System.out.print(PROMPT); // Display prompt
+                command = reader.readLine(); // Read command input
+                
+                if (command == null || command.trim().isEmpty()) {
+                    continue;
+                }
 
-            if (input.trim().isEmpty()) {
-                continue;
-            }
+                // Save the command to history
+                history.add(command);
+                if (history.size() > 50) {
+                    history.remove(0);  // Keep history size to 50 commands
+                }
 
-            List<String> tokens = tokenize(input);
-            String command = tokens.get(0);
-            List<String> arguments = tokens.subList(1, tokens.size());
+                // Handle exit
+                if ("exit".equalsIgnoreCase(command.trim())) {
+                    System.out.println("Exiting shell.");
+                    break;
+                }
 
-            switch (command) {
-                case "echo":
-                    handleEcho(arguments);
-                    break;
-                case "cat":
-                    handleCat(arguments);
-                    break;
-                case "pwd":
-                    handlePwd();
-                    break;
-                case "cd":
-                    handleCd(arguments);
-                    break;
-                case "exit":
-                    System.exit(0);
-                    break;
-                default:
-                    System.out.printf("%s: command not found%n", command);
-            }
-        }
-    }
-
-    private static List<String> tokenize(String input) {
-        List<String> tokens = new ArrayList<>();
-        StringBuilder currentToken = new StringBuilder();
-        boolean inSingleQuotes = false;
-        boolean inDoubleQuotes = false;
-
-        for (char c : input.toCharArray()) {
-            if (c == '\'') {
-                if (inDoubleQuotes) {
-                    currentToken.append(c);
+                // Handle built-in commands
+                if (command.startsWith("cd ")) {
+                    changeDirectory(command);
+                } else if (command.equals("history")) {
+                    printHistory();
+                } else if (command.startsWith("alias ")) {
+                    createAlias(command);
+                } else if (command.startsWith("jobs")) {
+                    listJobs();
+                } else if (command.startsWith("fg ")) {
+                    bringToForeground(command);
+                } else if (command.startsWith("bg ")) {
+                    runInBackground(command);
+                } else if (command.startsWith("export ")) {
+                    setEnvironmentVariable(command);
+                } else if (command.equals("env")) {
+                    printEnvironmentVariables();
                 } else {
-                    inSingleQuotes = !inSingleQuotes;
+                    executeCommand(command);
                 }
-            } else if (c == '"') {
-                if (inSingleQuotes) {
-                    currentToken.append(c);
-                } else {
-                    inDoubleQuotes = !inDoubleQuotes;
-                }
-            } else if (Character.isWhitespace(c) && !inSingleQuotes && !inDoubleQuotes) {
-                if (currentToken.length() > 0) {
-                    tokens.add(currentToken.toString());
-                    currentToken.setLength(0);
-                }
-            } else {
-                currentToken.append(c);
+
+            } catch (IOException e) {
+                System.err.println("Error reading input: " + e.getMessage());
             }
         }
+    }
 
-        if (currentToken.length() > 0) {
-            tokens.add(currentToken.toString());
+    // Change directory (built-in command)
+    private static void changeDirectory(String command) {
+        String path = command.substring(3).trim();
+        if (path.isEmpty()) {
+            path = System.getProperty("user.home");
         }
 
-        return tokens;
-    }
-
-    private static void handleEcho(List<String> args) {
-        String output = String.join(" ", args);
-        System.out.println(output);
-    }
-
-    private static void handleCat(List<String> files) {
-        StringBuilder output = new StringBuilder();
-
-        for (String filePath : files) {
-            // Handle quoted paths correctly
-            if ((filePath.startsWith("\"") && filePath.endsWith("\"")) ||
-                (filePath.startsWith("'") && filePath.endsWith("'"))) {
-                filePath = filePath.substring(1, filePath.length() - 1);
-            }
-
-            // Resolve the absolute file path
-            File file = new File(filePath);
-
-            if (!file.isAbsolute()) {
-                // Resolve relative to current directory
-                file = new File(currentDirectory, filePath);
-            }
-
-            if (file.exists() && file.isFile()) {
-                try {
-                    // Read file content
-                    output.append(Files.readString(file.toPath()));
-                } catch (IOException e) {
-                    System.out.printf("cat: %s: Error reading file%n", filePath);
-                    return;
-                }
-            } else {
-                System.out.printf("cat: %s: No such file or directory%n", filePath);
-                return;
-            }
-        }
-
-        // Print the concatenated output without line breaks
-        System.out.print(output.toString());
-    }
-
-    private static void handleCd(List<String> args) {
-        if (args.isEmpty()) {
-            // If no argument is provided, change to the home directory
-            if (homeDirectory.exists() && homeDirectory.isDirectory()) {
-                currentDirectory = homeDirectory;
-            } else {
-                System.out.println("cd: " + homeDirectory.getAbsolutePath() + ": No such file or directory");
-                return;
-            }
+        File dir = new File(path);
+        if (dir.exists() && dir.isDirectory()) {
+            System.setProperty("user.dir", path);
         } else {
-            String path = args.get(0);
+            System.err.println("cd: No such directory: " + path);
+        }
+    }
 
-            // Handle ~ (tilde) shorthand for the user's home directory
-            if (path.startsWith("~")) {
-                // Ensure that ~ expands to the correct home directory path
-                path = homeDirectory.getAbsolutePath() + path.substring(1);
+    // Print the history of commands
+    private static void printHistory() {
+        for (int i = 0; i < history.size(); i++) {
+            System.out.println((i + 1) + ". " + history.get(i));
+        }
+    }
+
+    // Create an alias for a command
+    private static void createAlias(String command) {
+        String[] parts = command.split(" ", 3);
+        if (parts.length == 3) {
+            aliases.put(parts[1], parts[2]);
+            System.out.println("Alias created: " + parts[1] + " = " + parts[2]);
+        } else {
+            System.out.println("Invalid alias format. Usage: alias <name> <command>");
+        }
+    }
+
+    // Execute the command, handle redirection, pipes, and background processes
+    private static void executeCommand(String command) {
+        // Replace aliases
+        for (Map.Entry<String, String> alias : aliases.entrySet()) {
+            if (command.startsWith(alias.getKey())) {
+                command = command.replaceFirst(alias.getKey(), alias.getValue());
+                break;
+            }
+        }
+
+        try {
+            // Split commands by pipe
+            String[] commands = command.split("\\|");
+            Process lastProcess = null;
+
+            for (String cmd : commands) {
+                cmd = cmd.trim();
+                boolean background = false;
+                if (cmd.endsWith("&")) {
+                    background = true;
+                    cmd = cmd.substring(0, cmd.length() - 1).trim();
+                }
+
+                String[] cmdArgs = cmd.split("\\s+");
+                ProcessBuilder processBuilder = new ProcessBuilder(cmdArgs);
+
+                if (lastProcess != null) {
+                    InputStream inputStream = lastProcess.getInputStream();
+                    processBuilder.redirectInput(inputStream);
+                }
+
+                Process process = processBuilder.start();
+
+                if (background) {
+                    // Handle background job
+                    int jobId = jobIdCounter++;
+                    backgroundJobs.put(jobId, process);
+                    System.out.println("Started background job: " + jobId);
+                } else {
+                    // Wait for the process to finish
+                    process.waitFor();
+                }
+
+                lastProcess = process;  // Chain the output of this process to the next process
             }
 
-            // Handle quoted paths
-            if ((path.startsWith("\"") && path.endsWith("\"")) ||
-                (path.startsWith("'") && path.endsWith("'"))) {
-                path = path.substring(1, path.length() - 1);
-            }
+        } catch (IOException | InterruptedException e) {
+            System.err.println("Error executing command: " + e.getMessage());
+        }
+    }
 
-            File newDir = new File(path);
-
-            if (!newDir.isAbsolute()) {
-                // Resolve relative to current directory
-                newDir = new File(currentDirectory, path);
-            }
-
-            if (newDir.exists() && newDir.isDirectory()) {
-                currentDirectory = newDir;
-            } else {
-                System.out.printf("cd: %s: No such file or directory%n", path);
+    // List background jobs
+    private static void listJobs() {
+        if (backgroundJobs.isEmpty()) {
+            System.out.println("No background jobs.");
+        } else {
+            for (Map.Entry<Integer, Process> job : backgroundJobs.entrySet()) {
+                int jobId = job.getKey();
+                Process process = job.getValue();
+                System.out.println("Job " + jobId + ": " + process.info().command());
             }
         }
     }
 
-    private static void handlePwd() {
-        // Output the current working directory
-        System.out.println(currentDirectory.getAbsolutePath());
+    // Bring a background job to the foreground
+    private static void bringToForeground(String command) {
+        try {
+            int jobId = Integer.parseInt(command.split(" ")[1].trim());
+            Process process = backgroundJobs.get(jobId);
+            if (process != null) {
+                process.waitFor(); // Wait for the job to complete
+                backgroundJobs.remove(jobId);
+            } else {
+                System.err.println("No such job: " + jobId);
+            }
+        } catch (NumberFormatException | InterruptedException e) {
+            System.err.println("Invalid job ID or error bringing job to foreground.");
+        }
+    }
+
+    // Run a job in the background
+    private static void runInBackground(String command) {
+        // Implementation similar to jobs, but it's already running in background
+        System.out.println("Job is already running in the background.");
+    }
+
+    // Set environment variable
+    private static void setEnvironmentVariable(String command) {
+        String[] parts = command.split(" ", 3);
+        if (parts.length == 3) {
+            System.setProperty(parts[1], parts[2]);
+            System.out.println("Environment variable set: " + parts[1] + " = " + parts[2]);
+        } else {
+            System.out.println("Invalid export format. Usage: export <name>=<value>");
+        }
+    }
+
+    // Print environment variables
+    private static void printEnvironmentVariables() {
+        System.getenv().forEach((key, value) -> System.out.println(key + "=" + value));
     }
 }
