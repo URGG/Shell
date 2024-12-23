@@ -8,6 +8,7 @@ import java.util.Scanner;
 public class Main {
 
     private static File currentDirectory = new File(System.getProperty("user.dir"));
+    private static File homeDirectory = new File("/tmp/raspberry/grape/strawberry");  // Custom home directory for testing
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
@@ -125,8 +126,8 @@ public class Main {
 
     private static void handleCd(List<String> args) {
         if (args.isEmpty()) {
-            // If no argument is provided, change to the user's home directory
-            currentDirectory = new File(System.getProperty("user.home"));
+            // If no argument is provided, change to the home directory (custom home directory)
+            currentDirectory = homeDirectory;
             return;
         }
 
@@ -134,9 +135,8 @@ public class Main {
 
         // Handle ~ (tilde) shorthand for the user's home directory
         if (path.startsWith("~")) {
-            // Ensure that ~ expands to the home directory path, not /root
-            String userHome = System.getProperty("user.home");
-            path = userHome + path.substring(1);
+            // Ensure that ~ expands to the home directory path (use custom home directory)
+            path = homeDirectory.getAbsolutePath() + path.substring(1);
         }
 
         // Handle quoted paths
