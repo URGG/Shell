@@ -143,8 +143,11 @@ public class Main {
         // Handle ~ (tilde) shorthand for the user's home directory
         if (path.startsWith("~")) {
             // Ensure that ~ expands to the home directory path (use custom home directory or fallback)
-            path = homeDirectory.exists() && homeDirectory.isDirectory() ? homeDirectory.getAbsolutePath() : fallbackHomeDirectory.getAbsolutePath();
-            path += path.substring(1);
+            if (homeDirectory.exists() && homeDirectory.isDirectory()) {
+                path = homeDirectory.getAbsolutePath() + path.substring(1);
+            } else {
+                path = fallbackHomeDirectory.getAbsolutePath() + path.substring(1);
+            }
         }
 
         // Handle quoted paths
