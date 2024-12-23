@@ -48,39 +48,30 @@ public class Main {
         StringBuilder currentToken = new StringBuilder();
         boolean inSingleQuotes = false;
         boolean inDoubleQuotes = false;
-        boolean escapeNext = false;
 
         for (char c : input.toCharArray()) {
-            if (escapeNext) {
-                // If escapeNext is true, we add the current character as is and reset escapeNext
-                currentToken.append(c);
-                escapeNext = false;
-            } else if (c == '\\') {
-                // If we encounter a backslash, mark the next character as escaped
-                escapeNext = true;
-            } else if (c == '"' && !inSingleQuotes) {
-                // Toggle double quotes state if we're not inside single quotes
+            if (c == '\'') {
                 if (inDoubleQuotes) {
-                    tokens.add(currentToken.toString()); // Add token when closing double quotes
-                    currentToken.setLength(0); // Reset current token builder
+                    currentToken.append(c);
+                } else {
+                    inSingleQuotes = !inSingleQuotes;
                 }
-                inDoubleQuotes = !inDoubleQuotes; // Toggle the state
-            } else if (c == '\'' && !inDoubleQuotes) {
-                // Toggle single quotes state if we're not inside double quotes
-                inSingleQuotes = !inSingleQuotes;
+            } else if (c == '"') {
+                if (inSingleQuotes) {
+                    currentToken.append(c);
+                } else {
+                    inDoubleQuotes = !inDoubleQuotes;
+                }
             } else if (Character.isWhitespace(c) && !inSingleQuotes && !inDoubleQuotes) {
-                // Handle token separation on whitespace when not inside quotes
                 if (currentToken.length() > 0) {
                     tokens.add(currentToken.toString());
-                    currentToken.setLength(0); // Reset token builder
+                    currentToken.setLength(0);
                 }
             } else {
-                // Append regular characters or characters inside quotes to the current token
                 currentToken.append(c);
             }
         }
 
-        // Add the last token if exists
         if (currentToken.length() > 0) {
             tokens.add(currentToken.toString());
         }
@@ -97,18 +88,18 @@ public class Main {
         StringBuilder output = new StringBuilder();
 
         for (String filePath : files) {
-            File file;
-            // Handle quoted paths correctly
-            if ((filePath.startsWith("\"") && filePath.endsWith("\"")) ||
+            // Strip quotes from the file path if they exist
+            if ((filePath.startsWith("\"") && filePath.endsWith("\"")) || 
                 (filePath.startsWith("'") && filePath.endsWith("'"))) {
                 filePath = filePath.substring(1, filePath.length() - 1);
             }
 
-            // Resolve file relative to current directory
-            file = new File(currentDirectory, filePath);
+            // Resolve the file path relative to the current directory
+            File file = new File(currentDirectory, filePath);
 
             if (file.exists() && file.isFile()) {
                 try {
+                    // Append file content to the output
                     output.append(Files.readString(file.toPath()));
                 } catch (IOException e) {
                     System.out.printf("cat: %s: Error reading file%n", filePath);
@@ -120,7 +111,7 @@ public class Main {
             }
         }
 
-        // Print the concatenated output without line breaks
+        // Print the concatenated file contents without line breaks
         System.out.print(output.toString());
     }
 
@@ -132,7 +123,8 @@ public class Main {
 
         String path = args.get(0);
 
-        if ((path.startsWith("\"") && path.endsWith("\"")) ||
+        // Strip quotes from the path if they exist
+        if ((path.startsWith("\"") && path.endsWith("\"")) || 
             (path.startsWith("'") && path.endsWith("'"))) {
             path = path.substring(1, path.length() - 1);
         }
@@ -146,3 +138,4 @@ public class Main {
         }
     }
 }
+
