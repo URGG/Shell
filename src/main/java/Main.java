@@ -99,7 +99,7 @@ public class Main {
 
             if (file.exists() && file.isFile()) {
                 try {
-                    // Append file content to the output
+                    // Read file content
                     output.append(Files.readString(file.toPath()));
                 } catch (IOException e) {
                     System.out.printf("cat: %s: Error reading file%n", filePath);
@@ -138,4 +138,3 @@ public class Main {
         }
     }
 }
-
