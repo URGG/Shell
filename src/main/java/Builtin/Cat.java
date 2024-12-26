@@ -1,10 +1,10 @@
-package command;
+package Builtin;
 
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import static command.Cd.getAbsPath;
+import static Builtin.Cd.getAbsPath;
 import static util.StringUtils.parseCommand;
 
 

@@ -1,9 +1,9 @@
-package command;
+package Builtin;
 
 import java.io.File;
 import java.nio.file.Files;
 
-import static command.Pwd.pwd;
+import static Builtin.Pwd.pwd;
 import static util.StringUtils.parseCommand;
 
 public class Cd implements Strategy {

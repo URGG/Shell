@@ -1,4 +1,4 @@
-package command;
+package Builtin;
 
 public interface Strategy {
    
