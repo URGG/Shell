@@ -1,9 +1,8 @@
-package Builtin.command;
+package command;
 
 import io.RedirectStream;
 import io.RedirectStreams;
 import io.StandardNamedStream;
-import parse.Redirect;
 import store.Storage;
 
 import java.io.IOException;
@@ -16,7 +15,7 @@ public record Executable(Path path) implements Command {
     static int times = 0;
 
     @Override
-    public CommandResponse execute(Storage storage, List<String> arguments, List<Redirect> redirects) {
+    public CommandResponse execute(Storage storage, List<String> arguments, RedirectStreams redirects) {
         try {
             Path workingDirectory = Path.of(System.getProperty("user.dir")).toAbsolutePath().normalize();
 
@@ -27,17 +26,23 @@ public record Executable(Path path) implements Command {
                     )
                     .toList();
 
-            //System.out.println("command arguments = " + commandArguments);
-            //System.out.println("redirect = " + redirects.get(0));
+//            if (commandArguments.get(0).contains("echo")) {
+//                System.out.println("command arguments = " + commandArguments);
+//                System.out.println(redirects);
+//                System.out.println(redirects.output());
+//                if (redirects.output() instanceof RedirectStream.File file) {
+//                    System.out.println(file.path());
+//                }
+//            }
 
-            final var redirectStreams = RedirectStreams.from(redirects);
+            //System.out.println("command arguments = " + commandArguments);
 
             final var builder = new ProcessBuilder(commandArguments)
                     .inheritIO()
                     .directory(workingDirectory.toFile());
 
-            applyRedirect(builder, redirectStreams.output(), StandardNamedStream.OUTPUT);
-            applyRedirect(builder, redirectStreams.error(), StandardNamedStream.ERROR);
+            applyRedirect(builder, redirects.output(), StandardNamedStream.OUTPUT);
+            applyRedirect(builder, redirects.error(), StandardNamedStream.ERROR);
 
             final var process = builder.start();
 
@@ -62,7 +67,9 @@ public record Executable(Path path) implements Command {
             case RedirectStream.File file -> {
                 file.close();
 
-                final var redirect = ProcessBuilder.Redirect.to(file.path().toFile());
+                final var redirect = file.append()
+                        ? ProcessBuilder.Redirect.appendTo(file.path().toFile())
+                        : ProcessBuilder.Redirect.to(file.path().toFile());
 
                 if (isStderr) {
                     builder.redirectError(redirect);

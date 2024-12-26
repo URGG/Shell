@@ -1,4 +1,4 @@
-package Builtin.command;
+package command;
 
 public record CommandResponse(String value) {
 

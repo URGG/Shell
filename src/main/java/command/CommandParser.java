@@ -1,4 +1,4 @@
-package Builtin.command;
+package command;
 
 import parse.LineParser;
 import store.Storage;
